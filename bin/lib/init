@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+# shellcheck shell=bash
+
+# Use BASH_DEBUG=1 to debug bash:
+[[ ${BASH_DEBUG-} ]] && set -x
+
+# Set sane, consistent Bash shopt settings:
+set -o errexit              # Exit on any bash error
+set -o nounset              # Fail when unset variable is used
+set -o pipefail             # Fail on any error in a pipeline
+
+# Nicer pipe semantics
+set +o monitor              # Turn off job control
+# shopt -s lastpipe           # Run end of pipe in current process
+
+# Sane globbing options
+# shopt -s inherit_errexit    # Inherit errexit in function calls
+# shopt -s globstar           # Support ** path globbing
+shopt -s nullglob           # Allow globs to return nothing
+# shopt -s globasciiranges    # [A-C] doesn't include b (lowercase)
+
+export LC_COLLATE=C         # Get ascii sort order in all locales
+
+# This should only run once:
+[[ ${CN_BASH_INIT-} ]] && return
+# Set flag to indicate already run:
+CN_BASH_INIT=1
+
+# Set REPO_ROOT upon which other things are based:
+REPO_ROOT=$(
+    set -e
+    path=${BASH_SOURCE[0]}
+    while [[ -h $path ]]; do
+        dir=$(cd -P "$(dirname "$path")" && pwd)
+        path=$(readlink "$path")
+        [[ $path == /* ]] || path=$dir/$path
+    done
+    cd -P "$(dirname "$path")"/../..
+    pwd
+) || exit
+export REPO_ROOT
+
+# Add this bash helper dir to the PATH for source-ing bash libs:
+PATH="$REPO_ROOT/bin/lib:$PATH"
+
+export PATH CN_BASH_INIT

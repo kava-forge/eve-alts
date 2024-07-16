@@ -1,0 +1,379 @@
+#!/bin/bash
+
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/init"
+source lib
+
+USAGE="\
+Usage: $(basename "$0") <cmd>
+
+Commands:
+    db              Run database-related commands
+    go              Run commands to analyze and build go binaries
+    dev             Run dev server commands
+    release         Build release binaries
+"
+
+USAGE_GO="\
+Usage: $(basename "$0") go <cmd>
+
+Commands:
+    build           Build a docker binary
+    deps            Download dependencies and install tools
+    format          Run gofumpt and gofumports on the codebase
+    generate        Run generators
+    list-tools      List the tools that are installed as part of deps
+    lint            Run the code linters (and formatter)
+    test            Run the test suite
+
+Compound Commands:
+    gt              Run generate + test
+    gtl             Run generate + test + lint
+"
+
+USAGE_DB="\
+Usage: $(basename "$0") db <cmd>
+
+Commands:
+    refresh-static          Download and prepare the latest static data
+    shell <app|static>      Connect to the database shell
+"
+
+USAGE_DEV="\
+Usage: $(basename "$0") dev <cmd>
+
+Commands:
+    run         Run the app locally
+    debug       Run the app locally in debug mode
+    setup       Set up dev dependencies
+    deps
+"
+
+USAGE_BUILD="\
+Usage: $(basename "$0") build <cmd>
+
+Commands:
+    debug       Build the app in debug mode
+    release     Build the app in release mode
+"
+
+main() {
+    dispatch "command" "$USAGE" "$@"
+}
+
+command:go() {
+    : "${BUILD_TAGS:=}"
+    export BUILD_TAGS
+
+    dispatch "go" "$USAGE_GO" "$@"
+}
+
+go:list-tools() {
+    awk '
+        ($1=="_" && match($2, "^\"[^\"]*\"")){
+            print substr($2, 2, RLENGTH-2)
+        }
+    ' "$REPO_ROOT/tools/tools.go"
+}
+
+go:deps() {
+    go mod download
+
+    go:list-tools | while read -r tool; do
+        echo "Installing $tool"
+        go install "$tool"
+    done
+}
+
+go:format() {
+    local project
+    project="./..."
+    [[ $# -eq 0 ]] || {
+        project="$1"
+        shift
+    }
+
+    [[ "$project" =~ /...$ ]] || 
+        project="$project/..."
+
+    echo "Running formatters on $project"
+
+    for d in $(go list -f '{{.Dir}}' "$project"); do 
+        gofumpt -w "$d"/*.go || die "Couldn't gofumpt $d"
+    done
+
+    for d in $(go list -f '{{.Dir}}' "$project"); do 
+        goimports -w -local "$project" "$d"/*.go || die "Could goimports $d"
+    done
+}
+
+go:generate() {
+    local project
+    project="./..."
+    [[ $# -eq 0 ]] || {
+        project="$1"
+        shift
+    }
+
+    [[ "$project" =~ /...$ ]] || 
+        project="$project/..."
+
+    echo "Running generate on $project"
+
+    go generate -tags="$BUILD_TAGS" "$project"
+    go:format "$project"
+}
+
+go:lint() {
+    local project
+
+    project="./..."
+    [[ $# -eq 0 ]] || {
+        project="$1"
+        shift
+    }
+
+    [[ "$project" =~ /...$ ]] || 
+        project="$project/..."
+
+    echo "Running linters on $project"
+
+    golangci-lint run --build-tags="$BUILD_TAGS" -E revive,gosimple,staticcheck "$project"
+    golangci-lint run --build-tags="$BUILD_TAGS" -E depguard,errcheck,gocritic,gofmt,goimports,gosec,govet,ineffassign,nakedret,prealloc,typecheck,unconvert,unused "$project"
+}
+
+go:test() {
+    local project
+    project="./..."
+    [[ $# -eq 0 ]] || {
+        project="$1"
+        shift
+    }
+
+    [[ "$project" =~ /...$ ]] || 
+        project="$project/..."
+
+    echo "Running tests for $project"
+
+    go test -tags="$BUILD_TAGS" -mod readonly "$project"
+}
+
+go:cover() {
+    local project
+    project="./..."
+    [[ $# -eq 0 ]] || {
+        project="$1"
+        shift
+    }
+
+    [[ "$project" =~ /...$ ]] || 
+        project="$project/..."
+
+    echo "Running tests for $project"
+
+    go test -tags="$BUILD_TAGS" -mod readonly -cover -coverprofile=./cover.profile "$project" && \
+        go tool cover -html ./cover.profile
+}
+
+go:build() {
+    echo "build"
+    local app project
+    
+    [[ $# -gt 0 ]] ||
+        die "Must specify a project to build"
+
+    project="$1"
+    shift
+
+    [[ "$project" =~ /...$ ]] && 
+        project="${project%/*}"
+
+    # echo "* $project"
+
+    app="$(basename "${project}")"
+    echo "Building $project to $REPO_ROOT/out/$app"
+
+    : "${GITHUB_SHA:="$(git rev-parse HEAD || echo 'unknown')"}"
+    : "${VERSION:="$(git describe --tags --always --dirty 2>/dev/null || echo "$GITHUB_SHA")"}"
+
+    echo "Building binary with version=$VERSION, sha=$GITHUB_SHA"
+
+    go build \
+        -tags="$BUILD_TAGS" \
+        -mod readonly \
+        -v \
+        -ldflags "-s -w -X main.AppName=corvee-$app -X main.BuildDate='$(date -u +%Y%m%d)' -X main.BuildVersion='$VERSION' -X main.BuildSHA='$GITHUB_SHA'" \
+        -o "$REPO_ROOT/out/$app" \
+        "$project"
+}
+
+go:gt() {
+    local failures=()
+
+    go:generate "$@" ||
+        failures+=("FAIL: generate failed")
+
+    go:test "$@" ||
+        failures+=("FAIL: tests failed")
+
+    [[ ${#failures[*]} -eq 0 ]] ||
+        die "" "${failures[@]}"
+}
+
+go:tl() {
+    local failures=()
+
+    go:test "$@" ||
+        failures+=("FAIL: tests failed")
+
+    go:lint "$@" ||
+        failures+=("FAIL: vet failed")
+
+    [[ ${#failures[*]} -eq 0 ]] ||
+        die "" "${failures[@]}"
+}
+
+go:gtl() {
+    local failures=()
+
+    go:generate "$@" ||
+        failures+=("FAIL: generate failed")
+
+    go:test "$@" ||
+        failures+=("FAIL: tests failed")
+
+    go:lint "$@" ||
+        failures+=("FAIL: vet failed")
+
+    [[ ${#failures[*]} -eq 0 ]] ||
+        die "" "${failures[@]}"
+}
+
+command:db() {
+    dispatch "db" "$USAGE_DB" "$@"
+}
+
+db:refresh-static() {
+    # TODO
+    exit 1
+}
+
+db:shell() {
+    local dbenv
+
+    [[ $# -gt 0 ]] ||
+        die "Missing kind"
+
+    dbenv="$1"; shift
+
+    sqlite3 "$HOME/Library/Application Support/evealts/$dbenv.db"
+}
+
+command:dev() {
+    : "${BUILD_TAGS:=}"
+    export BUILD_TAGS
+    
+    dispatch "dev" "$USAGE_DEV" "$@"
+}
+
+dev:deps() {
+    cat "$REPO_ROOT"/tools/brew-deps.txt | while read -r tool; do
+        [[ "$tool" = "" ]] || {
+            echo "Installing $tool"
+            brew install "$tool"
+        }
+    done
+}
+
+dev:setup() {
+    dev:deps
+    go:deps
+}
+
+dev:run() {
+    (
+        cd "$REPO_ROOT"
+
+        go:build ./cmd/eve-alts/...
+
+        EVE_ALTS_LOGGING_LEVEL=debug \
+        EVE_ALTS_LOGGING_FORMAT=json-stdout \
+        EVE_ALTS_PPROF_ENABLED=true \
+            "$REPO_ROOT/out/eve-alts"
+    )
+}
+
+dev:debug() {
+    (
+        cd "$REPO_ROOT"
+
+        BUILD_TAGS=debug go:build ./cmd/eve-alts/...
+
+        EVE_ALTS_LOGGING_LEVEL=debug \
+        EVE_ALTS_LOGGING_FORMAT=json-stdout \
+        EVE_ALTS_PPROF_ENABLED=true \
+            "$REPO_ROOT/out/eve-alts"
+    )
+}
+
+command:build() {
+    : "${BUILD_TAGS:=}"
+    export BUILD_TAGS
+
+    dispatch "build" "$USAGE_BUILD" "$@"
+}
+
+build:release() {
+    _build "$@"
+}
+
+build:debug() {
+    BUILD_TAGS="debug $BUILD_TAGS" _build "$@" -debug -no-strip-debug
+}
+
+_build() {
+    local target arch
+
+    [[ $# -gt 0 ]] || die "Missing target(s)"
+    target="$1"; shift
+
+    if [[ $# -gt 0 ]]; then
+        arch="$1"; shift
+    else
+        arch="$(uname -m)"
+    fi
+
+    COMMIT_COUNT="$(git rev-list HEAD --count)"
+    COMMIT_COUNT_SINCE_LAST="$(git rev-list --count "$(git describe --tags --always | cut -d'-' -f1 2>/dev/null)"..HEAD)"
+    : "${GITHUB_SHA:="$(git rev-parse HEAD || echo 'unknown')"}"
+    : "${VERSION:="$(git describe --tags --exact-match 2>/dev/null || echo "$(git describe --tags --always | cut -d'-' -f1 2>/dev/null).$COMMIT_COUNT_SINCE_LAST")"}"
+
+    echo "Building binary with version=$VERSION, sha=$GITHUB_SHA, target=$target, arch=$arch, buildnum=$COMMIT_COUNT, tags=$BUILD_TAGS"
+
+    case "$arch" in
+        "x86_64")
+            arch="amd64"
+            ;;
+        "aarch64")
+            arch="arm64"
+            ;;
+        *)
+            ;;
+    esac
+
+    (
+        cd "$REPO_ROOT"
+        
+        set -x
+        fyne-cross "$target" \
+            -engine=podman \
+            -arch="$arch" \
+            -tags="$BUILD_TAGS" \
+            -app-version="$(echo -n "$VERSION" | sed 's!^v!!')" \
+            -app-build="$COMMIT_COUNT" \
+            -ldflags="-X=main.AppName=EVEAlts -X=main.BuildDate=$(date -u +%Y%m%d) -X=main.BuildVersion=$VERSION -X=main.BuildSHA=$GITHUB_SHA" \
+            "$@" \
+            ./cmd/eve-alts
+    )
+}
+
+main "$@"

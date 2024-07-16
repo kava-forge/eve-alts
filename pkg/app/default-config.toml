@@ -1,0 +1,24 @@
+[database]
+location = ""
+static_location = ""
+database = ""
+
+[logging]
+level = "error"
+format = "json"
+directory = ""
+
+[pprof]
+enabled = false
+
+[serving]
+hostport = ""
+callback_path = ""
+callback_scheme = ""
+pprof_hostport = ""
+prometheus_hostport = ""
+
+[telemetry]
+jaeger_hostport = ""
+prometheus_hostport = ""
+trace_probability = 0.0

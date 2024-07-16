@@ -1,0 +1,34 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    schema: "static_schema/"
+    queries: "pkg/repository/internal/static/queries/"
+    gen:
+      go:
+        out: "pkg/repository/internal/static"
+        package: "static"
+        emit_interface: true
+        emit_methods_with_db_argument: true
+        emit_enum_valid_method: true
+        emit_all_enum_values: true
+        output_db_file_name: "db.gen.go"
+        output_models_file_name: "models.gen.go"
+        output_querier_file_name: "querier.gen.go"
+        output_files_suffix: ".gen"
+    strict_function_checks: true
+  - engine: "sqlite"
+    schema: "migrations/"
+    queries: "pkg/repository/internal/sqlite/queries/"
+    gen:
+      go:
+        out: "pkg/repository/internal/sqlite"
+        package: "sqlite"
+        emit_interface: true
+        emit_methods_with_db_argument: true
+        emit_enum_valid_method: true
+        emit_all_enum_values: true
+        output_db_file_name: "db.gen.go"
+        output_models_file_name: "models.gen.go"
+        output_querier_file_name: "querier.gen.go"
+        output_files_suffix: ".gen"
+    strict_function_checks: true

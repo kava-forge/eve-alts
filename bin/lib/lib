@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+# shellcheck shell=bash
+
+# Some common bash helper functions:
+
+# Check if a command or function is callable:
+# eg: can foo-bar || die "Can't foo-bar"
+can() {
+    type "$1" &>/dev/null
+}
+
+# Print a message to stderr and exit with error code:
+# eg: die 'Something is wrong'
+die() {
+    printf "\e[31m%s\e[0m\n" "$@" >&2
+    exit 1
+}
+
+# Join a list of strings with a (single char) delimiter:
+# eg: join , 1 2 3   # => 1,2,3
+join() {
+    (IFS=$1; shift; echo "$*")
+}
+
+echo_all() {
+    for arg in "$@"; do
+        echo "$arg"
+    done
+}
+
+dispatch() {
+    local prefix kind usage
+    [[ $# -gt 0 ]] ||
+        die "need sub-command prefix"
+
+    prefix="$1"; shift
+
+    [[ $# -gt 0 ]] || 
+        die "missing usage string"
+
+    usage="$1"; shift
+
+    [[ $# -gt 0 ]] ||
+        die "missing sub-command" "" "$usage"
+
+    kind="$1"; shift
+
+    [[ $kind =~ ^[-_[:alnum:]]+$ ]] ||
+        die "'$kind' is improper sub-command format" "" "$usage"
+
+    can "$prefix:$kind" ||
+        die "'$kind' is an unknown sub-command" "" "$usage"
+
+    "$prefix:$kind" "$@" || die "" "$usage"
+}
+
+term_kill_needed="no"
+
+# see https://unix.stackexchange.com/a/444676
+prep_term()
+{
+    unset term_child_pid
+    term_kill_needed="no"
+    trap 'handle_term' TERM INT
+}
+
+handle_term()
+{
+    if [ "${term_child_pid}" ]; then
+        kill -TERM "${term_child_pid}" 2>/dev/null
+    else
+        term_kill_needed="yes"
+    fi
+}
+
+wait_term()
+{
+    term_child_pid=$!
+    echo "waiting for term"
+    if [[ "${term_kill_needed}" = "yes" ]]; then
+        kill -TERM "${term_child_pid}" 2>/dev/null
+    fi
+    wait ${term_child_pid} 2>/dev/null
+    trap - TERM INT
+    wait ${term_child_pid} 2>/dev/null
+}

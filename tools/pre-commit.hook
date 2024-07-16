@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+exec 1>&2
+
+hooks_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$hooks_dir/../../bin/lib/init"
+source lib
+
+"$REPO_ROOT/bin/cnctl" go tl ./... || die "Backend linting failed"
+git add .
