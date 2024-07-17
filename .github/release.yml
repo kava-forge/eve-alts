@@ -1,0 +1,35 @@
+name: Auto-Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+
+  build-all:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Static Data
+        run: |
+          ./bin/ctl db refresh-static
+
+      - name: Build
+        run: |
+          ./bin/ctl build release windows \*
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: |
+            fyne-cross/dist/windows-amd64/EVEAlts.exe.zip
+            fyne-cross/dist/windows-arm64/EVEAlts.exe.zip
+            fyne-cross/dist/windows-386/EVEAlts.exe.zip

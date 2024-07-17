@@ -253,8 +253,10 @@ command:db() {
 }
 
 db:refresh-static() {
-    # TODO
-    exit 1
+    [[ -f pkg/esi/staticdata.sqlite ]] && rm pkg/esi/staticdata.sqlite
+    curl -o pkg/esi/staticdata.sqlite.bz2 https://www.fuzzwork.co.uk/dump/sqlite-latest.sqlite.bz2
+    bunzip2 pkg/esi/staticdata.sqlite.bz2
+    go run ./cmd/clean-static -database pkg/esi/staticdata.sqlite
 }
 
 db:shell() {
