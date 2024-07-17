@@ -3,7 +3,7 @@
 //   sqlc v1.26.0
 // source: staticdata_clean.sql
 
-package static
+package staticdb
 
 import (
 	"context"

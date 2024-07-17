@@ -2,11 +2,11 @@ version: "2"
 sql:
   - engine: "sqlite"
     schema: "static_schema/"
-    queries: "pkg/repository/internal/static/queries/"
+    queries: "pkg/repository/internal/staticdb/queries/"
     gen:
       go:
-        out: "pkg/repository/internal/static"
-        package: "static"
+        out: "pkg/repository/internal/staticdb"
+        package: "staticdb"
         emit_interface: true
         emit_methods_with_db_argument: true
         emit_enum_valid_method: true
@@ -17,12 +17,12 @@ sql:
         output_files_suffix: ".gen"
     strict_function_checks: true
   - engine: "sqlite"
-    schema: "migrations/"
-    queries: "pkg/repository/internal/sqlite/queries/"
+    schema: "migrations/*.up.sql"
+    queries: "pkg/repository/internal/appdb/queries/"
     gen:
       go:
-        out: "pkg/repository/internal/sqlite"
-        package: "sqlite"
+        out: "pkg/repository/internal/appdb"
+        package: "appdb"
         emit_interface: true
         emit_methods_with_db_argument: true
         emit_enum_valid_method: true

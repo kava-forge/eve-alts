@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	retryablehttp "github.com/hashicorp/go-retryablehttp"
-
 	"github.com/kava-forge/eve-alts/lib/http"
 )
 

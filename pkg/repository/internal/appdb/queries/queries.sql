@@ -76,8 +76,8 @@ RETURNING *;
 
 -- name: InsertTag :one
 
-INSERT INTO tags ("name", "color_r", "color_g", "color_b")
-VALUES (?, ?, ?, ?)
+INSERT INTO tags ("name", "color_r", "color_g", "color_b", "color_a")
+VALUES (?, ?, ?, ?, ?)
 RETURNING *;
 
 -- name: UpdateTag :exec
@@ -86,7 +86,8 @@ SET
     "name" = ?,
     "color_r" = ?,
     "color_g" = ?,
-    "color_b" = ?
+    "color_b" = ?,
+    "color_a" = ?
 WHERE "id" = ?;
 
 -- name: DeleteTag :exec

@@ -8,11 +8,11 @@ import (
 	"github.com/kava-forge/eve-alts/lib/logging/level"
 
 	"github.com/kava-forge/eve-alts/pkg/database"
-	"github.com/kava-forge/eve-alts/pkg/repository/internal/static"
+	"github.com/kava-forge/eve-alts/pkg/repository/internal/staticdb"
 	"github.com/kava-forge/eve-alts/pkg/telemetry"
 )
 
-type BatchGetSkillNamesRow = static.BatchGetSkillNamesRow
+type BatchGetSkillNamesRow = staticdb.BatchGetSkillNamesRow
 
 //counterfeiter:generate . StaticData
 type StaticData interface {
@@ -31,7 +31,7 @@ type staticDependencies interface {
 
 type StaticSqliteRepository struct {
 	deps    staticDependencies
-	queries *static.Queries
+	queries *staticdb.Queries
 }
 
 var _ StaticData = (*StaticSqliteRepository)(nil)
@@ -39,11 +39,11 @@ var _ StaticData = (*StaticSqliteRepository)(nil)
 func NewStaticData(deps staticDependencies) *StaticSqliteRepository {
 	return &StaticSqliteRepository{
 		deps:    deps,
-		queries: static.New(),
+		queries: staticdb.New(),
 	}
 }
 
-func (r *StaticSqliteRepository) db(tx database.Tx) static.DBTX {
+func (r *StaticSqliteRepository) db(tx database.Tx) staticdb.DBTX {
 	if tx != nil {
 		return tx
 	}
@@ -82,7 +82,7 @@ func (r *StaticSqliteRepository) GetSkillName(ctx context.Context, skillID int64
 	logger := r.deps.Logger()
 	level.Debug(logger).Message("calling GetSkillName")
 
-	name, err := r.queries.GetSkillName(ctx, r.db(tx), static.GetSkillNameParams{
+	name, err := r.queries.GetSkillName(ctx, r.db(tx), staticdb.GetSkillNameParams{
 		SkillID:  skillID,
 		Language: "en",
 	})
@@ -100,7 +100,7 @@ func (r *StaticSqliteRepository) GetSkillIDByName(ctx context.Context, skillName
 	logger := r.deps.Logger()
 	level.Debug(logger).Message("calling GetSkillIDByName", "skill_name", skillName)
 
-	id, err := r.queries.GetSkillIDFromName(ctx, r.db(tx), static.GetSkillIDFromNameParams{
+	id, err := r.queries.GetSkillIDFromName(ctx, r.db(tx), staticdb.GetSkillIDFromNameParams{
 		SkillNameLower: strings.ToLower(skillName),
 		Language:       "en",
 	})
@@ -118,7 +118,7 @@ func (r *StaticSqliteRepository) BatchGetSkillNames(ctx context.Context, skillID
 	logger := r.deps.Logger()
 	level.Debug(logger).Message("calling BatchGetSkillNames")
 
-	rows, err := r.queries.BatchGetSkillNames(ctx, r.db(tx), static.BatchGetSkillNamesParams{
+	rows, err := r.queries.BatchGetSkillNames(ctx, r.db(tx), staticdb.BatchGetSkillNamesParams{
 		SkillIds: skillIDs,
 		Language: "en",
 	})

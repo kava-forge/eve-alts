@@ -3,7 +3,7 @@
 //   sqlc v1.26.0
 // source: queries.sql
 
-package sqlite
+package appdb
 
 import (
 	"context"
@@ -203,7 +203,7 @@ func (q *Queries) GetAllTagSkills(ctx context.Context, db DBTX, tagID int64) ([]
 
 const getAllTags = `-- name: GetAllTags :many
 SELECT 
-    id, name, color_r, color_g, color_b
+    id, name, color_r, color_g, color_b, color_a, "IF"
 FROM tags
 ORDER BY "name"
 `
@@ -223,6 +223,8 @@ func (q *Queries) GetAllTags(ctx context.Context, db DBTX) ([]Tag, error) {
 			&i.ColorR,
 			&i.ColorG,
 			&i.ColorB,
+			&i.ColorA,
+			&i.IF,
 		); err != nil {
 			return nil, err
 		}
@@ -260,9 +262,9 @@ func (q *Queries) GetTokenForCharacter(ctx context.Context, db DBTX, characterID
 
 const insertTag = `-- name: InsertTag :one
 
-INSERT INTO tags ("name", "color_r", "color_g", "color_b")
-VALUES (?, ?, ?, ?)
-RETURNING id, name, color_r, color_g, color_b
+INSERT INTO tags ("name", "color_r", "color_g", "color_b", "color_a")
+VALUES (?, ?, ?, ?, ?)
+RETURNING id, name, color_r, color_g, color_b, color_a, "IF"
 `
 
 type InsertTagParams struct {
@@ -270,6 +272,7 @@ type InsertTagParams struct {
 	ColorR int64
 	ColorG int64
 	ColorB int64
+	ColorA int64
 }
 
 func (q *Queries) InsertTag(ctx context.Context, db DBTX, arg InsertTagParams) (Tag, error) {
@@ -278,6 +281,7 @@ func (q *Queries) InsertTag(ctx context.Context, db DBTX, arg InsertTagParams) (
 		arg.ColorR,
 		arg.ColorG,
 		arg.ColorB,
+		arg.ColorA,
 	)
 	var i Tag
 	err := row.Scan(
@@ -286,6 +290,8 @@ func (q *Queries) InsertTag(ctx context.Context, db DBTX, arg InsertTagParams) (
 		&i.ColorR,
 		&i.ColorG,
 		&i.ColorB,
+		&i.ColorA,
+		&i.IF,
 	)
 	return i, err
 }
@@ -296,7 +302,8 @@ SET
     "name" = ?,
     "color_r" = ?,
     "color_g" = ?,
-    "color_b" = ?
+    "color_b" = ?,
+    "color_a" = ?
 WHERE "id" = ?
 `
 
@@ -305,6 +312,7 @@ type UpdateTagParams struct {
 	ColorR int64
 	ColorG int64
 	ColorB int64
+	ColorA int64
 	ID     int64
 }
 
@@ -314,6 +322,7 @@ func (q *Queries) UpdateTag(ctx context.Context, db DBTX, arg UpdateTagParams) e
 		arg.ColorR,
 		arg.ColorG,
 		arg.ColorB,
+		arg.ColorA,
 		arg.ID,
 	)
 	return err

@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS tag_skills;
+DROP TABLE IF EXISTS tags;

@@ -9,7 +9,7 @@ import (
 
 	"github.com/kava-forge/eve-alts/pkg/database"
 	"github.com/kava-forge/eve-alts/pkg/repository"
-	"github.com/kava-forge/eve-alts/pkg/repository/internal/sqlite"
+	"github.com/kava-forge/eve-alts/pkg/repository/internal/appdb"
 )
 
 type FakeAppData struct {
@@ -67,7 +67,7 @@ type FakeAppData struct {
 	deleteTagSkillsReturnsOnCall map[int]struct {
 		result1 error
 	}
-	GetAllCharacterSkillsStub        func(context.Context, int64, database.Tx) ([]sqlite.CharacterSkill, error)
+	GetAllCharacterSkillsStub        func(context.Context, int64, database.Tx) ([]appdb.CharacterSkill, error)
 	getAllCharacterSkillsMutex       sync.RWMutex
 	getAllCharacterSkillsArgsForCall []struct {
 		arg1 context.Context
@@ -75,11 +75,11 @@ type FakeAppData struct {
 		arg3 database.Tx
 	}
 	getAllCharacterSkillsReturns struct {
-		result1 []sqlite.CharacterSkill
+		result1 []appdb.CharacterSkill
 		result2 error
 	}
 	getAllCharacterSkillsReturnsOnCall map[int]struct {
-		result1 []sqlite.CharacterSkill
+		result1 []appdb.CharacterSkill
 		result2 error
 	}
 	GetAllCharactersStub        func(context.Context, database.Tx) ([]*repository.CharacterDBData, error)
@@ -96,7 +96,7 @@ type FakeAppData struct {
 		result1 []*repository.CharacterDBData
 		result2 error
 	}
-	GetAllTagSkillsStub        func(context.Context, int64, database.Tx) ([]sqlite.TagSkill, error)
+	GetAllTagSkillsStub        func(context.Context, int64, database.Tx) ([]appdb.TagSkill, error)
 	getAllTagSkillsMutex       sync.RWMutex
 	getAllTagSkillsArgsForCall []struct {
 		arg1 context.Context
@@ -104,11 +104,11 @@ type FakeAppData struct {
 		arg3 database.Tx
 	}
 	getAllTagSkillsReturns struct {
-		result1 []sqlite.TagSkill
+		result1 []appdb.TagSkill
 		result2 error
 	}
 	getAllTagSkillsReturnsOnCall map[int]struct {
-		result1 []sqlite.TagSkill
+		result1 []appdb.TagSkill
 		result2 error
 	}
 	GetAllTagsStub        func(context.Context, database.Tx) ([]*repository.TagDBData, error)
@@ -125,7 +125,7 @@ type FakeAppData struct {
 		result1 []*repository.TagDBData
 		result2 error
 	}
-	GetTokenForCharacterStub        func(context.Context, int64, database.Tx) (sqlite.Token, error)
+	GetTokenForCharacterStub        func(context.Context, int64, database.Tx) (appdb.Token, error)
 	getTokenForCharacterMutex       sync.RWMutex
 	getTokenForCharacterArgsForCall []struct {
 		arg1 context.Context
@@ -133,14 +133,14 @@ type FakeAppData struct {
 		arg3 database.Tx
 	}
 	getTokenForCharacterReturns struct {
-		result1 sqlite.Token
+		result1 appdb.Token
 		result2 error
 	}
 	getTokenForCharacterReturnsOnCall map[int]struct {
-		result1 sqlite.Token
+		result1 appdb.Token
 		result2 error
 	}
-	InsertTagStub        func(context.Context, string, color.Color, database.Tx) (sqlite.Tag, error)
+	InsertTagStub        func(context.Context, string, color.Color, database.Tx) (appdb.Tag, error)
 	insertTagMutex       sync.RWMutex
 	insertTagArgsForCall []struct {
 		arg1 context.Context
@@ -149,11 +149,11 @@ type FakeAppData struct {
 		arg4 database.Tx
 	}
 	insertTagReturns struct {
-		result1 sqlite.Tag
+		result1 appdb.Tag
 		result2 error
 	}
 	insertTagReturnsOnCall map[int]struct {
-		result1 sqlite.Tag
+		result1 appdb.Tag
 		result2 error
 	}
 	UpdateTagStub        func(context.Context, int64, string, color.Color, database.Tx) error
@@ -171,7 +171,7 @@ type FakeAppData struct {
 	updateTagReturnsOnCall map[int]struct {
 		result1 error
 	}
-	UpsertAllianceStub        func(context.Context, int64, string, string, string, database.Tx) (sqlite.Alliance, error)
+	UpsertAllianceStub        func(context.Context, int64, string, string, string, database.Tx) (appdb.Alliance, error)
 	upsertAllianceMutex       sync.RWMutex
 	upsertAllianceArgsForCall []struct {
 		arg1 context.Context
@@ -182,14 +182,14 @@ type FakeAppData struct {
 		arg6 database.Tx
 	}
 	upsertAllianceReturns struct {
-		result1 sqlite.Alliance
+		result1 appdb.Alliance
 		result2 error
 	}
 	upsertAllianceReturnsOnCall map[int]struct {
-		result1 sqlite.Alliance
+		result1 appdb.Alliance
 		result2 error
 	}
-	UpsertCharacterStub        func(context.Context, int64, string, string, int64, database.Tx) (sqlite.Character, error)
+	UpsertCharacterStub        func(context.Context, int64, string, string, int64, database.Tx) (appdb.Character, error)
 	upsertCharacterMutex       sync.RWMutex
 	upsertCharacterArgsForCall []struct {
 		arg1 context.Context
@@ -200,14 +200,14 @@ type FakeAppData struct {
 		arg6 database.Tx
 	}
 	upsertCharacterReturns struct {
-		result1 sqlite.Character
+		result1 appdb.Character
 		result2 error
 	}
 	upsertCharacterReturnsOnCall map[int]struct {
-		result1 sqlite.Character
+		result1 appdb.Character
 		result2 error
 	}
-	UpsertCharacterSkillStub        func(context.Context, int64, int64, int64, database.Tx) (sqlite.CharacterSkill, error)
+	UpsertCharacterSkillStub        func(context.Context, int64, int64, int64, database.Tx) (appdb.CharacterSkill, error)
 	upsertCharacterSkillMutex       sync.RWMutex
 	upsertCharacterSkillArgsForCall []struct {
 		arg1 context.Context
@@ -217,14 +217,14 @@ type FakeAppData struct {
 		arg5 database.Tx
 	}
 	upsertCharacterSkillReturns struct {
-		result1 sqlite.CharacterSkill
+		result1 appdb.CharacterSkill
 		result2 error
 	}
 	upsertCharacterSkillReturnsOnCall map[int]struct {
-		result1 sqlite.CharacterSkill
+		result1 appdb.CharacterSkill
 		result2 error
 	}
-	UpsertCorporationStub        func(context.Context, int64, string, string, string, int64, database.Tx) (sqlite.Corporation, error)
+	UpsertCorporationStub        func(context.Context, int64, string, string, string, int64, database.Tx) (appdb.Corporation, error)
 	upsertCorporationMutex       sync.RWMutex
 	upsertCorporationArgsForCall []struct {
 		arg1 context.Context
@@ -236,14 +236,14 @@ type FakeAppData struct {
 		arg7 database.Tx
 	}
 	upsertCorporationReturns struct {
-		result1 sqlite.Corporation
+		result1 appdb.Corporation
 		result2 error
 	}
 	upsertCorporationReturnsOnCall map[int]struct {
-		result1 sqlite.Corporation
+		result1 appdb.Corporation
 		result2 error
 	}
-	UpsertTagSkillStub        func(context.Context, int64, int64, int64, database.Tx) (sqlite.TagSkill, error)
+	UpsertTagSkillStub        func(context.Context, int64, int64, int64, database.Tx) (appdb.TagSkill, error)
 	upsertTagSkillMutex       sync.RWMutex
 	upsertTagSkillArgsForCall []struct {
 		arg1 context.Context
@@ -253,14 +253,14 @@ type FakeAppData struct {
 		arg5 database.Tx
 	}
 	upsertTagSkillReturns struct {
-		result1 sqlite.TagSkill
+		result1 appdb.TagSkill
 		result2 error
 	}
 	upsertTagSkillReturnsOnCall map[int]struct {
-		result1 sqlite.TagSkill
+		result1 appdb.TagSkill
 		result2 error
 	}
-	UpsertTokenStub        func(context.Context, int64, string, string, string, time.Time, database.Tx) (sqlite.Token, error)
+	UpsertTokenStub        func(context.Context, int64, string, string, string, time.Time, database.Tx) (appdb.Token, error)
 	upsertTokenMutex       sync.RWMutex
 	upsertTokenArgsForCall []struct {
 		arg1 context.Context
@@ -272,11 +272,11 @@ type FakeAppData struct {
 		arg7 database.Tx
 	}
 	upsertTokenReturns struct {
-		result1 sqlite.Token
+		result1 appdb.Token
 		result2 error
 	}
 	upsertTokenReturnsOnCall map[int]struct {
-		result1 sqlite.Token
+		result1 appdb.Token
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -547,7 +547,7 @@ func (fake *FakeAppData) DeleteTagSkillsReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeAppData) GetAllCharacterSkills(arg1 context.Context, arg2 int64, arg3 database.Tx) ([]sqlite.CharacterSkill, error) {
+func (fake *FakeAppData) GetAllCharacterSkills(arg1 context.Context, arg2 int64, arg3 database.Tx) ([]appdb.CharacterSkill, error) {
 	fake.getAllCharacterSkillsMutex.Lock()
 	ret, specificReturn := fake.getAllCharacterSkillsReturnsOnCall[len(fake.getAllCharacterSkillsArgsForCall)]
 	fake.getAllCharacterSkillsArgsForCall = append(fake.getAllCharacterSkillsArgsForCall, struct {
@@ -574,7 +574,7 @@ func (fake *FakeAppData) GetAllCharacterSkillsCallCount() int {
 	return len(fake.getAllCharacterSkillsArgsForCall)
 }
 
-func (fake *FakeAppData) GetAllCharacterSkillsCalls(stub func(context.Context, int64, database.Tx) ([]sqlite.CharacterSkill, error)) {
+func (fake *FakeAppData) GetAllCharacterSkillsCalls(stub func(context.Context, int64, database.Tx) ([]appdb.CharacterSkill, error)) {
 	fake.getAllCharacterSkillsMutex.Lock()
 	defer fake.getAllCharacterSkillsMutex.Unlock()
 	fake.GetAllCharacterSkillsStub = stub
@@ -587,28 +587,28 @@ func (fake *FakeAppData) GetAllCharacterSkillsArgsForCall(i int) (context.Contex
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeAppData) GetAllCharacterSkillsReturns(result1 []sqlite.CharacterSkill, result2 error) {
+func (fake *FakeAppData) GetAllCharacterSkillsReturns(result1 []appdb.CharacterSkill, result2 error) {
 	fake.getAllCharacterSkillsMutex.Lock()
 	defer fake.getAllCharacterSkillsMutex.Unlock()
 	fake.GetAllCharacterSkillsStub = nil
 	fake.getAllCharacterSkillsReturns = struct {
-		result1 []sqlite.CharacterSkill
+		result1 []appdb.CharacterSkill
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) GetAllCharacterSkillsReturnsOnCall(i int, result1 []sqlite.CharacterSkill, result2 error) {
+func (fake *FakeAppData) GetAllCharacterSkillsReturnsOnCall(i int, result1 []appdb.CharacterSkill, result2 error) {
 	fake.getAllCharacterSkillsMutex.Lock()
 	defer fake.getAllCharacterSkillsMutex.Unlock()
 	fake.GetAllCharacterSkillsStub = nil
 	if fake.getAllCharacterSkillsReturnsOnCall == nil {
 		fake.getAllCharacterSkillsReturnsOnCall = make(map[int]struct {
-			result1 []sqlite.CharacterSkill
+			result1 []appdb.CharacterSkill
 			result2 error
 		})
 	}
 	fake.getAllCharacterSkillsReturnsOnCall[i] = struct {
-		result1 []sqlite.CharacterSkill
+		result1 []appdb.CharacterSkill
 		result2 error
 	}{result1, result2}
 }
@@ -678,7 +678,7 @@ func (fake *FakeAppData) GetAllCharactersReturnsOnCall(i int, result1 []*reposit
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) GetAllTagSkills(arg1 context.Context, arg2 int64, arg3 database.Tx) ([]sqlite.TagSkill, error) {
+func (fake *FakeAppData) GetAllTagSkills(arg1 context.Context, arg2 int64, arg3 database.Tx) ([]appdb.TagSkill, error) {
 	fake.getAllTagSkillsMutex.Lock()
 	ret, specificReturn := fake.getAllTagSkillsReturnsOnCall[len(fake.getAllTagSkillsArgsForCall)]
 	fake.getAllTagSkillsArgsForCall = append(fake.getAllTagSkillsArgsForCall, struct {
@@ -705,7 +705,7 @@ func (fake *FakeAppData) GetAllTagSkillsCallCount() int {
 	return len(fake.getAllTagSkillsArgsForCall)
 }
 
-func (fake *FakeAppData) GetAllTagSkillsCalls(stub func(context.Context, int64, database.Tx) ([]sqlite.TagSkill, error)) {
+func (fake *FakeAppData) GetAllTagSkillsCalls(stub func(context.Context, int64, database.Tx) ([]appdb.TagSkill, error)) {
 	fake.getAllTagSkillsMutex.Lock()
 	defer fake.getAllTagSkillsMutex.Unlock()
 	fake.GetAllTagSkillsStub = stub
@@ -718,28 +718,28 @@ func (fake *FakeAppData) GetAllTagSkillsArgsForCall(i int) (context.Context, int
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeAppData) GetAllTagSkillsReturns(result1 []sqlite.TagSkill, result2 error) {
+func (fake *FakeAppData) GetAllTagSkillsReturns(result1 []appdb.TagSkill, result2 error) {
 	fake.getAllTagSkillsMutex.Lock()
 	defer fake.getAllTagSkillsMutex.Unlock()
 	fake.GetAllTagSkillsStub = nil
 	fake.getAllTagSkillsReturns = struct {
-		result1 []sqlite.TagSkill
+		result1 []appdb.TagSkill
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) GetAllTagSkillsReturnsOnCall(i int, result1 []sqlite.TagSkill, result2 error) {
+func (fake *FakeAppData) GetAllTagSkillsReturnsOnCall(i int, result1 []appdb.TagSkill, result2 error) {
 	fake.getAllTagSkillsMutex.Lock()
 	defer fake.getAllTagSkillsMutex.Unlock()
 	fake.GetAllTagSkillsStub = nil
 	if fake.getAllTagSkillsReturnsOnCall == nil {
 		fake.getAllTagSkillsReturnsOnCall = make(map[int]struct {
-			result1 []sqlite.TagSkill
+			result1 []appdb.TagSkill
 			result2 error
 		})
 	}
 	fake.getAllTagSkillsReturnsOnCall[i] = struct {
-		result1 []sqlite.TagSkill
+		result1 []appdb.TagSkill
 		result2 error
 	}{result1, result2}
 }
@@ -809,7 +809,7 @@ func (fake *FakeAppData) GetAllTagsReturnsOnCall(i int, result1 []*repository.Ta
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) GetTokenForCharacter(arg1 context.Context, arg2 int64, arg3 database.Tx) (sqlite.Token, error) {
+func (fake *FakeAppData) GetTokenForCharacter(arg1 context.Context, arg2 int64, arg3 database.Tx) (appdb.Token, error) {
 	fake.getTokenForCharacterMutex.Lock()
 	ret, specificReturn := fake.getTokenForCharacterReturnsOnCall[len(fake.getTokenForCharacterArgsForCall)]
 	fake.getTokenForCharacterArgsForCall = append(fake.getTokenForCharacterArgsForCall, struct {
@@ -836,7 +836,7 @@ func (fake *FakeAppData) GetTokenForCharacterCallCount() int {
 	return len(fake.getTokenForCharacterArgsForCall)
 }
 
-func (fake *FakeAppData) GetTokenForCharacterCalls(stub func(context.Context, int64, database.Tx) (sqlite.Token, error)) {
+func (fake *FakeAppData) GetTokenForCharacterCalls(stub func(context.Context, int64, database.Tx) (appdb.Token, error)) {
 	fake.getTokenForCharacterMutex.Lock()
 	defer fake.getTokenForCharacterMutex.Unlock()
 	fake.GetTokenForCharacterStub = stub
@@ -849,33 +849,33 @@ func (fake *FakeAppData) GetTokenForCharacterArgsForCall(i int) (context.Context
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeAppData) GetTokenForCharacterReturns(result1 sqlite.Token, result2 error) {
+func (fake *FakeAppData) GetTokenForCharacterReturns(result1 appdb.Token, result2 error) {
 	fake.getTokenForCharacterMutex.Lock()
 	defer fake.getTokenForCharacterMutex.Unlock()
 	fake.GetTokenForCharacterStub = nil
 	fake.getTokenForCharacterReturns = struct {
-		result1 sqlite.Token
+		result1 appdb.Token
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) GetTokenForCharacterReturnsOnCall(i int, result1 sqlite.Token, result2 error) {
+func (fake *FakeAppData) GetTokenForCharacterReturnsOnCall(i int, result1 appdb.Token, result2 error) {
 	fake.getTokenForCharacterMutex.Lock()
 	defer fake.getTokenForCharacterMutex.Unlock()
 	fake.GetTokenForCharacterStub = nil
 	if fake.getTokenForCharacterReturnsOnCall == nil {
 		fake.getTokenForCharacterReturnsOnCall = make(map[int]struct {
-			result1 sqlite.Token
+			result1 appdb.Token
 			result2 error
 		})
 	}
 	fake.getTokenForCharacterReturnsOnCall[i] = struct {
-		result1 sqlite.Token
+		result1 appdb.Token
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) InsertTag(arg1 context.Context, arg2 string, arg3 color.Color, arg4 database.Tx) (sqlite.Tag, error) {
+func (fake *FakeAppData) InsertTag(arg1 context.Context, arg2 string, arg3 color.Color, arg4 database.Tx) (appdb.Tag, error) {
 	fake.insertTagMutex.Lock()
 	ret, specificReturn := fake.insertTagReturnsOnCall[len(fake.insertTagArgsForCall)]
 	fake.insertTagArgsForCall = append(fake.insertTagArgsForCall, struct {
@@ -903,7 +903,7 @@ func (fake *FakeAppData) InsertTagCallCount() int {
 	return len(fake.insertTagArgsForCall)
 }
 
-func (fake *FakeAppData) InsertTagCalls(stub func(context.Context, string, color.Color, database.Tx) (sqlite.Tag, error)) {
+func (fake *FakeAppData) InsertTagCalls(stub func(context.Context, string, color.Color, database.Tx) (appdb.Tag, error)) {
 	fake.insertTagMutex.Lock()
 	defer fake.insertTagMutex.Unlock()
 	fake.InsertTagStub = stub
@@ -916,28 +916,28 @@ func (fake *FakeAppData) InsertTagArgsForCall(i int) (context.Context, string, c
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
-func (fake *FakeAppData) InsertTagReturns(result1 sqlite.Tag, result2 error) {
+func (fake *FakeAppData) InsertTagReturns(result1 appdb.Tag, result2 error) {
 	fake.insertTagMutex.Lock()
 	defer fake.insertTagMutex.Unlock()
 	fake.InsertTagStub = nil
 	fake.insertTagReturns = struct {
-		result1 sqlite.Tag
+		result1 appdb.Tag
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) InsertTagReturnsOnCall(i int, result1 sqlite.Tag, result2 error) {
+func (fake *FakeAppData) InsertTagReturnsOnCall(i int, result1 appdb.Tag, result2 error) {
 	fake.insertTagMutex.Lock()
 	defer fake.insertTagMutex.Unlock()
 	fake.InsertTagStub = nil
 	if fake.insertTagReturnsOnCall == nil {
 		fake.insertTagReturnsOnCall = make(map[int]struct {
-			result1 sqlite.Tag
+			result1 appdb.Tag
 			result2 error
 		})
 	}
 	fake.insertTagReturnsOnCall[i] = struct {
-		result1 sqlite.Tag
+		result1 appdb.Tag
 		result2 error
 	}{result1, result2}
 }
@@ -1007,7 +1007,7 @@ func (fake *FakeAppData) UpdateTagReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeAppData) UpsertAlliance(arg1 context.Context, arg2 int64, arg3 string, arg4 string, arg5 string, arg6 database.Tx) (sqlite.Alliance, error) {
+func (fake *FakeAppData) UpsertAlliance(arg1 context.Context, arg2 int64, arg3 string, arg4 string, arg5 string, arg6 database.Tx) (appdb.Alliance, error) {
 	fake.upsertAllianceMutex.Lock()
 	ret, specificReturn := fake.upsertAllianceReturnsOnCall[len(fake.upsertAllianceArgsForCall)]
 	fake.upsertAllianceArgsForCall = append(fake.upsertAllianceArgsForCall, struct {
@@ -1037,7 +1037,7 @@ func (fake *FakeAppData) UpsertAllianceCallCount() int {
 	return len(fake.upsertAllianceArgsForCall)
 }
 
-func (fake *FakeAppData) UpsertAllianceCalls(stub func(context.Context, int64, string, string, string, database.Tx) (sqlite.Alliance, error)) {
+func (fake *FakeAppData) UpsertAllianceCalls(stub func(context.Context, int64, string, string, string, database.Tx) (appdb.Alliance, error)) {
 	fake.upsertAllianceMutex.Lock()
 	defer fake.upsertAllianceMutex.Unlock()
 	fake.UpsertAllianceStub = stub
@@ -1050,33 +1050,33 @@ func (fake *FakeAppData) UpsertAllianceArgsForCall(i int) (context.Context, int6
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6
 }
 
-func (fake *FakeAppData) UpsertAllianceReturns(result1 sqlite.Alliance, result2 error) {
+func (fake *FakeAppData) UpsertAllianceReturns(result1 appdb.Alliance, result2 error) {
 	fake.upsertAllianceMutex.Lock()
 	defer fake.upsertAllianceMutex.Unlock()
 	fake.UpsertAllianceStub = nil
 	fake.upsertAllianceReturns = struct {
-		result1 sqlite.Alliance
+		result1 appdb.Alliance
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) UpsertAllianceReturnsOnCall(i int, result1 sqlite.Alliance, result2 error) {
+func (fake *FakeAppData) UpsertAllianceReturnsOnCall(i int, result1 appdb.Alliance, result2 error) {
 	fake.upsertAllianceMutex.Lock()
 	defer fake.upsertAllianceMutex.Unlock()
 	fake.UpsertAllianceStub = nil
 	if fake.upsertAllianceReturnsOnCall == nil {
 		fake.upsertAllianceReturnsOnCall = make(map[int]struct {
-			result1 sqlite.Alliance
+			result1 appdb.Alliance
 			result2 error
 		})
 	}
 	fake.upsertAllianceReturnsOnCall[i] = struct {
-		result1 sqlite.Alliance
+		result1 appdb.Alliance
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) UpsertCharacter(arg1 context.Context, arg2 int64, arg3 string, arg4 string, arg5 int64, arg6 database.Tx) (sqlite.Character, error) {
+func (fake *FakeAppData) UpsertCharacter(arg1 context.Context, arg2 int64, arg3 string, arg4 string, arg5 int64, arg6 database.Tx) (appdb.Character, error) {
 	fake.upsertCharacterMutex.Lock()
 	ret, specificReturn := fake.upsertCharacterReturnsOnCall[len(fake.upsertCharacterArgsForCall)]
 	fake.upsertCharacterArgsForCall = append(fake.upsertCharacterArgsForCall, struct {
@@ -1106,7 +1106,7 @@ func (fake *FakeAppData) UpsertCharacterCallCount() int {
 	return len(fake.upsertCharacterArgsForCall)
 }
 
-func (fake *FakeAppData) UpsertCharacterCalls(stub func(context.Context, int64, string, string, int64, database.Tx) (sqlite.Character, error)) {
+func (fake *FakeAppData) UpsertCharacterCalls(stub func(context.Context, int64, string, string, int64, database.Tx) (appdb.Character, error)) {
 	fake.upsertCharacterMutex.Lock()
 	defer fake.upsertCharacterMutex.Unlock()
 	fake.UpsertCharacterStub = stub
@@ -1119,33 +1119,33 @@ func (fake *FakeAppData) UpsertCharacterArgsForCall(i int) (context.Context, int
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6
 }
 
-func (fake *FakeAppData) UpsertCharacterReturns(result1 sqlite.Character, result2 error) {
+func (fake *FakeAppData) UpsertCharacterReturns(result1 appdb.Character, result2 error) {
 	fake.upsertCharacterMutex.Lock()
 	defer fake.upsertCharacterMutex.Unlock()
 	fake.UpsertCharacterStub = nil
 	fake.upsertCharacterReturns = struct {
-		result1 sqlite.Character
+		result1 appdb.Character
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) UpsertCharacterReturnsOnCall(i int, result1 sqlite.Character, result2 error) {
+func (fake *FakeAppData) UpsertCharacterReturnsOnCall(i int, result1 appdb.Character, result2 error) {
 	fake.upsertCharacterMutex.Lock()
 	defer fake.upsertCharacterMutex.Unlock()
 	fake.UpsertCharacterStub = nil
 	if fake.upsertCharacterReturnsOnCall == nil {
 		fake.upsertCharacterReturnsOnCall = make(map[int]struct {
-			result1 sqlite.Character
+			result1 appdb.Character
 			result2 error
 		})
 	}
 	fake.upsertCharacterReturnsOnCall[i] = struct {
-		result1 sqlite.Character
+		result1 appdb.Character
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) UpsertCharacterSkill(arg1 context.Context, arg2 int64, arg3 int64, arg4 int64, arg5 database.Tx) (sqlite.CharacterSkill, error) {
+func (fake *FakeAppData) UpsertCharacterSkill(arg1 context.Context, arg2 int64, arg3 int64, arg4 int64, arg5 database.Tx) (appdb.CharacterSkill, error) {
 	fake.upsertCharacterSkillMutex.Lock()
 	ret, specificReturn := fake.upsertCharacterSkillReturnsOnCall[len(fake.upsertCharacterSkillArgsForCall)]
 	fake.upsertCharacterSkillArgsForCall = append(fake.upsertCharacterSkillArgsForCall, struct {
@@ -1174,7 +1174,7 @@ func (fake *FakeAppData) UpsertCharacterSkillCallCount() int {
 	return len(fake.upsertCharacterSkillArgsForCall)
 }
 
-func (fake *FakeAppData) UpsertCharacterSkillCalls(stub func(context.Context, int64, int64, int64, database.Tx) (sqlite.CharacterSkill, error)) {
+func (fake *FakeAppData) UpsertCharacterSkillCalls(stub func(context.Context, int64, int64, int64, database.Tx) (appdb.CharacterSkill, error)) {
 	fake.upsertCharacterSkillMutex.Lock()
 	defer fake.upsertCharacterSkillMutex.Unlock()
 	fake.UpsertCharacterSkillStub = stub
@@ -1187,33 +1187,33 @@ func (fake *FakeAppData) UpsertCharacterSkillArgsForCall(i int) (context.Context
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
-func (fake *FakeAppData) UpsertCharacterSkillReturns(result1 sqlite.CharacterSkill, result2 error) {
+func (fake *FakeAppData) UpsertCharacterSkillReturns(result1 appdb.CharacterSkill, result2 error) {
 	fake.upsertCharacterSkillMutex.Lock()
 	defer fake.upsertCharacterSkillMutex.Unlock()
 	fake.UpsertCharacterSkillStub = nil
 	fake.upsertCharacterSkillReturns = struct {
-		result1 sqlite.CharacterSkill
+		result1 appdb.CharacterSkill
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) UpsertCharacterSkillReturnsOnCall(i int, result1 sqlite.CharacterSkill, result2 error) {
+func (fake *FakeAppData) UpsertCharacterSkillReturnsOnCall(i int, result1 appdb.CharacterSkill, result2 error) {
 	fake.upsertCharacterSkillMutex.Lock()
 	defer fake.upsertCharacterSkillMutex.Unlock()
 	fake.UpsertCharacterSkillStub = nil
 	if fake.upsertCharacterSkillReturnsOnCall == nil {
 		fake.upsertCharacterSkillReturnsOnCall = make(map[int]struct {
-			result1 sqlite.CharacterSkill
+			result1 appdb.CharacterSkill
 			result2 error
 		})
 	}
 	fake.upsertCharacterSkillReturnsOnCall[i] = struct {
-		result1 sqlite.CharacterSkill
+		result1 appdb.CharacterSkill
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) UpsertCorporation(arg1 context.Context, arg2 int64, arg3 string, arg4 string, arg5 string, arg6 int64, arg7 database.Tx) (sqlite.Corporation, error) {
+func (fake *FakeAppData) UpsertCorporation(arg1 context.Context, arg2 int64, arg3 string, arg4 string, arg5 string, arg6 int64, arg7 database.Tx) (appdb.Corporation, error) {
 	fake.upsertCorporationMutex.Lock()
 	ret, specificReturn := fake.upsertCorporationReturnsOnCall[len(fake.upsertCorporationArgsForCall)]
 	fake.upsertCorporationArgsForCall = append(fake.upsertCorporationArgsForCall, struct {
@@ -1244,7 +1244,7 @@ func (fake *FakeAppData) UpsertCorporationCallCount() int {
 	return len(fake.upsertCorporationArgsForCall)
 }
 
-func (fake *FakeAppData) UpsertCorporationCalls(stub func(context.Context, int64, string, string, string, int64, database.Tx) (sqlite.Corporation, error)) {
+func (fake *FakeAppData) UpsertCorporationCalls(stub func(context.Context, int64, string, string, string, int64, database.Tx) (appdb.Corporation, error)) {
 	fake.upsertCorporationMutex.Lock()
 	defer fake.upsertCorporationMutex.Unlock()
 	fake.UpsertCorporationStub = stub
@@ -1257,33 +1257,33 @@ func (fake *FakeAppData) UpsertCorporationArgsForCall(i int) (context.Context, i
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7
 }
 
-func (fake *FakeAppData) UpsertCorporationReturns(result1 sqlite.Corporation, result2 error) {
+func (fake *FakeAppData) UpsertCorporationReturns(result1 appdb.Corporation, result2 error) {
 	fake.upsertCorporationMutex.Lock()
 	defer fake.upsertCorporationMutex.Unlock()
 	fake.UpsertCorporationStub = nil
 	fake.upsertCorporationReturns = struct {
-		result1 sqlite.Corporation
+		result1 appdb.Corporation
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) UpsertCorporationReturnsOnCall(i int, result1 sqlite.Corporation, result2 error) {
+func (fake *FakeAppData) UpsertCorporationReturnsOnCall(i int, result1 appdb.Corporation, result2 error) {
 	fake.upsertCorporationMutex.Lock()
 	defer fake.upsertCorporationMutex.Unlock()
 	fake.UpsertCorporationStub = nil
 	if fake.upsertCorporationReturnsOnCall == nil {
 		fake.upsertCorporationReturnsOnCall = make(map[int]struct {
-			result1 sqlite.Corporation
+			result1 appdb.Corporation
 			result2 error
 		})
 	}
 	fake.upsertCorporationReturnsOnCall[i] = struct {
-		result1 sqlite.Corporation
+		result1 appdb.Corporation
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) UpsertTagSkill(arg1 context.Context, arg2 int64, arg3 int64, arg4 int64, arg5 database.Tx) (sqlite.TagSkill, error) {
+func (fake *FakeAppData) UpsertTagSkill(arg1 context.Context, arg2 int64, arg3 int64, arg4 int64, arg5 database.Tx) (appdb.TagSkill, error) {
 	fake.upsertTagSkillMutex.Lock()
 	ret, specificReturn := fake.upsertTagSkillReturnsOnCall[len(fake.upsertTagSkillArgsForCall)]
 	fake.upsertTagSkillArgsForCall = append(fake.upsertTagSkillArgsForCall, struct {
@@ -1312,7 +1312,7 @@ func (fake *FakeAppData) UpsertTagSkillCallCount() int {
 	return len(fake.upsertTagSkillArgsForCall)
 }
 
-func (fake *FakeAppData) UpsertTagSkillCalls(stub func(context.Context, int64, int64, int64, database.Tx) (sqlite.TagSkill, error)) {
+func (fake *FakeAppData) UpsertTagSkillCalls(stub func(context.Context, int64, int64, int64, database.Tx) (appdb.TagSkill, error)) {
 	fake.upsertTagSkillMutex.Lock()
 	defer fake.upsertTagSkillMutex.Unlock()
 	fake.UpsertTagSkillStub = stub
@@ -1325,33 +1325,33 @@ func (fake *FakeAppData) UpsertTagSkillArgsForCall(i int) (context.Context, int6
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
-func (fake *FakeAppData) UpsertTagSkillReturns(result1 sqlite.TagSkill, result2 error) {
+func (fake *FakeAppData) UpsertTagSkillReturns(result1 appdb.TagSkill, result2 error) {
 	fake.upsertTagSkillMutex.Lock()
 	defer fake.upsertTagSkillMutex.Unlock()
 	fake.UpsertTagSkillStub = nil
 	fake.upsertTagSkillReturns = struct {
-		result1 sqlite.TagSkill
+		result1 appdb.TagSkill
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) UpsertTagSkillReturnsOnCall(i int, result1 sqlite.TagSkill, result2 error) {
+func (fake *FakeAppData) UpsertTagSkillReturnsOnCall(i int, result1 appdb.TagSkill, result2 error) {
 	fake.upsertTagSkillMutex.Lock()
 	defer fake.upsertTagSkillMutex.Unlock()
 	fake.UpsertTagSkillStub = nil
 	if fake.upsertTagSkillReturnsOnCall == nil {
 		fake.upsertTagSkillReturnsOnCall = make(map[int]struct {
-			result1 sqlite.TagSkill
+			result1 appdb.TagSkill
 			result2 error
 		})
 	}
 	fake.upsertTagSkillReturnsOnCall[i] = struct {
-		result1 sqlite.TagSkill
+		result1 appdb.TagSkill
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) UpsertToken(arg1 context.Context, arg2 int64, arg3 string, arg4 string, arg5 string, arg6 time.Time, arg7 database.Tx) (sqlite.Token, error) {
+func (fake *FakeAppData) UpsertToken(arg1 context.Context, arg2 int64, arg3 string, arg4 string, arg5 string, arg6 time.Time, arg7 database.Tx) (appdb.Token, error) {
 	fake.upsertTokenMutex.Lock()
 	ret, specificReturn := fake.upsertTokenReturnsOnCall[len(fake.upsertTokenArgsForCall)]
 	fake.upsertTokenArgsForCall = append(fake.upsertTokenArgsForCall, struct {
@@ -1382,7 +1382,7 @@ func (fake *FakeAppData) UpsertTokenCallCount() int {
 	return len(fake.upsertTokenArgsForCall)
 }
 
-func (fake *FakeAppData) UpsertTokenCalls(stub func(context.Context, int64, string, string, string, time.Time, database.Tx) (sqlite.Token, error)) {
+func (fake *FakeAppData) UpsertTokenCalls(stub func(context.Context, int64, string, string, string, time.Time, database.Tx) (appdb.Token, error)) {
 	fake.upsertTokenMutex.Lock()
 	defer fake.upsertTokenMutex.Unlock()
 	fake.UpsertTokenStub = stub
@@ -1395,28 +1395,28 @@ func (fake *FakeAppData) UpsertTokenArgsForCall(i int) (context.Context, int64, 
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7
 }
 
-func (fake *FakeAppData) UpsertTokenReturns(result1 sqlite.Token, result2 error) {
+func (fake *FakeAppData) UpsertTokenReturns(result1 appdb.Token, result2 error) {
 	fake.upsertTokenMutex.Lock()
 	defer fake.upsertTokenMutex.Unlock()
 	fake.UpsertTokenStub = nil
 	fake.upsertTokenReturns = struct {
-		result1 sqlite.Token
+		result1 appdb.Token
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAppData) UpsertTokenReturnsOnCall(i int, result1 sqlite.Token, result2 error) {
+func (fake *FakeAppData) UpsertTokenReturnsOnCall(i int, result1 appdb.Token, result2 error) {
 	fake.upsertTokenMutex.Lock()
 	defer fake.upsertTokenMutex.Unlock()
 	fake.UpsertTokenStub = nil
 	if fake.upsertTokenReturnsOnCall == nil {
 		fake.upsertTokenReturnsOnCall = make(map[int]struct {
-			result1 sqlite.Token
+			result1 appdb.Token
 			result2 error
 		})
 	}
 	fake.upsertTokenReturnsOnCall[i] = struct {
-		result1 sqlite.Token
+		result1 appdb.Token
 		result2 error
 	}{result1, result2}
 }

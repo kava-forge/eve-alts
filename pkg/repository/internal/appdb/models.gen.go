@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.26.0
 
-package sqlite
+package appdb
 
 import (
 	"database/sql"
@@ -43,6 +43,8 @@ type Tag struct {
 	ColorR int64
 	ColorG int64
 	ColorB int64
+	ColorA int64
+	IF     interface{}
 }
 
 type TagSkill struct {

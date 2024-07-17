@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS character_skills;
+DROP TABLE IF EXISTS tokens;
+DROP TABLE IF EXISTS characters;
+DROP TABLE IF EXISTS corporations;
+DROP TABLE IF EXISTS alliances;

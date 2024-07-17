@@ -7,11 +7,11 @@ import (
 
 	"github.com/kava-forge/eve-alts/pkg/database"
 	"github.com/kava-forge/eve-alts/pkg/repository"
-	"github.com/kava-forge/eve-alts/pkg/repository/internal/static"
+	"github.com/kava-forge/eve-alts/pkg/repository/internal/staticdb"
 )
 
 type FakeStaticData struct {
-	BatchGetSkillNamesStub        func(context.Context, []int64, database.Tx) ([]static.BatchGetSkillNamesRow, error)
+	BatchGetSkillNamesStub        func(context.Context, []int64, database.Tx) ([]staticdb.BatchGetSkillNamesRow, error)
 	batchGetSkillNamesMutex       sync.RWMutex
 	batchGetSkillNamesArgsForCall []struct {
 		arg1 context.Context
@@ -19,11 +19,11 @@ type FakeStaticData struct {
 		arg3 database.Tx
 	}
 	batchGetSkillNamesReturns struct {
-		result1 []static.BatchGetSkillNamesRow
+		result1 []staticdb.BatchGetSkillNamesRow
 		result2 error
 	}
 	batchGetSkillNamesReturnsOnCall map[int]struct {
-		result1 []static.BatchGetSkillNamesRow
+		result1 []staticdb.BatchGetSkillNamesRow
 		result2 error
 	}
 	CleanTranslationsStub        func(context.Context, database.Tx) error
@@ -86,7 +86,7 @@ type FakeStaticData struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeStaticData) BatchGetSkillNames(arg1 context.Context, arg2 []int64, arg3 database.Tx) ([]static.BatchGetSkillNamesRow, error) {
+func (fake *FakeStaticData) BatchGetSkillNames(arg1 context.Context, arg2 []int64, arg3 database.Tx) ([]staticdb.BatchGetSkillNamesRow, error) {
 	var arg2Copy []int64
 	if arg2 != nil {
 		arg2Copy = make([]int64, len(arg2))
@@ -118,7 +118,7 @@ func (fake *FakeStaticData) BatchGetSkillNamesCallCount() int {
 	return len(fake.batchGetSkillNamesArgsForCall)
 }
 
-func (fake *FakeStaticData) BatchGetSkillNamesCalls(stub func(context.Context, []int64, database.Tx) ([]static.BatchGetSkillNamesRow, error)) {
+func (fake *FakeStaticData) BatchGetSkillNamesCalls(stub func(context.Context, []int64, database.Tx) ([]staticdb.BatchGetSkillNamesRow, error)) {
 	fake.batchGetSkillNamesMutex.Lock()
 	defer fake.batchGetSkillNamesMutex.Unlock()
 	fake.BatchGetSkillNamesStub = stub
@@ -131,28 +131,28 @@ func (fake *FakeStaticData) BatchGetSkillNamesArgsForCall(i int) (context.Contex
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeStaticData) BatchGetSkillNamesReturns(result1 []static.BatchGetSkillNamesRow, result2 error) {
+func (fake *FakeStaticData) BatchGetSkillNamesReturns(result1 []staticdb.BatchGetSkillNamesRow, result2 error) {
 	fake.batchGetSkillNamesMutex.Lock()
 	defer fake.batchGetSkillNamesMutex.Unlock()
 	fake.BatchGetSkillNamesStub = nil
 	fake.batchGetSkillNamesReturns = struct {
-		result1 []static.BatchGetSkillNamesRow
+		result1 []staticdb.BatchGetSkillNamesRow
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeStaticData) BatchGetSkillNamesReturnsOnCall(i int, result1 []static.BatchGetSkillNamesRow, result2 error) {
+func (fake *FakeStaticData) BatchGetSkillNamesReturnsOnCall(i int, result1 []staticdb.BatchGetSkillNamesRow, result2 error) {
 	fake.batchGetSkillNamesMutex.Lock()
 	defer fake.batchGetSkillNamesMutex.Unlock()
 	fake.BatchGetSkillNamesStub = nil
 	if fake.batchGetSkillNamesReturnsOnCall == nil {
 		fake.batchGetSkillNamesReturnsOnCall = make(map[int]struct {
-			result1 []static.BatchGetSkillNamesRow
+			result1 []staticdb.BatchGetSkillNamesRow
 			result2 error
 		})
 	}
 	fake.batchGetSkillNamesReturnsOnCall[i] = struct {
-		result1 []static.BatchGetSkillNamesRow
+		result1 []staticdb.BatchGetSkillNamesRow
 		result2 error
 	}{result1, result2}
 }

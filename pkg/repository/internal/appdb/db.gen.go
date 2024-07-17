@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.26.0
 
-package static
+package appdb
 
 import (
 	"context"
@@ -20,4 +20,5 @@ func New() *Queries {
 	return &Queries{}
 }
 
-type Queries struct{}
+type Queries struct {
+}

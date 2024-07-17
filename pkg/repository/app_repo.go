@@ -13,18 +13,18 @@ import (
 
 	"github.com/kava-forge/eve-alts/pkg/database"
 	"github.com/kava-forge/eve-alts/pkg/keys"
-	"github.com/kava-forge/eve-alts/pkg/repository/internal/sqlite"
+	"github.com/kava-forge/eve-alts/pkg/repository/internal/appdb"
 	"github.com/kava-forge/eve-alts/pkg/telemetry"
 )
 
 type (
-	Character      = sqlite.Character
-	Corporation    = sqlite.Corporation
-	Alliance       = sqlite.Alliance
-	Token          = sqlite.Token
-	CharacterSkill = sqlite.CharacterSkill
-	Tag            = sqlite.Tag
-	TagSkill       = sqlite.TagSkill
+	Character      = appdb.Character
+	Corporation    = appdb.Corporation
+	Alliance       = appdb.Alliance
+	Token          = appdb.Token
+	CharacterSkill = appdb.CharacterSkill
+	Tag            = appdb.Tag
+	TagSkill       = appdb.TagSkill
 )
 
 type CharacterDBData struct {
@@ -44,7 +44,7 @@ func (t TagDBData) Color() color.Color {
 		R: uint8(t.Tag.ColorR),
 		G: uint8(t.Tag.ColorG),
 		B: uint8(t.Tag.ColorB),
-		A: 255,
+		A: uint8(t.Tag.ColorA),
 	}
 }
 
@@ -81,7 +81,7 @@ type appDependencies interface {
 
 type AppSqliteRepository struct {
 	deps    appDependencies
-	queries *sqlite.Queries
+	queries *appdb.Queries
 }
 
 var _ AppData = (*AppSqliteRepository)(nil)
@@ -89,11 +89,11 @@ var _ AppData = (*AppSqliteRepository)(nil)
 func NewAppData(deps appDependencies) *AppSqliteRepository {
 	return &AppSqliteRepository{
 		deps:    deps,
-		queries: sqlite.New(),
+		queries: appdb.New(),
 	}
 }
 
-func (r *AppSqliteRepository) db(tx database.Tx) sqlite.DBTX {
+func (r *AppSqliteRepository) db(tx database.Tx) appdb.DBTX {
 	if tx != nil {
 		return tx
 	}
@@ -108,7 +108,7 @@ func (r *AppSqliteRepository) UpsertCharacter(ctx context.Context, charID int64,
 	level.Debug(logger).Message("calling UpsertCharacter", keys.CharacterID, charID, keys.CharacterName, name, keys.CharacterPicture, picture, keys.CorporationID, corporationID)
 
 	inner := func(ctx context.Context, tx database.Tx) error {
-		char, err = r.queries.UpsertCharacter(ctx, tx, sqlite.UpsertCharacterParams{
+		char, err = r.queries.UpsertCharacter(ctx, tx, appdb.UpsertCharacterParams{
 			ID:            charID,
 			Name:          name,
 			Picture:       picture,
@@ -139,7 +139,7 @@ func (r *AppSqliteRepository) UpsertCorporation(ctx context.Context, corpID int6
 	}
 
 	inner := func(ctx context.Context, tx database.Tx) error {
-		corp, err = r.queries.UpsertCorporation(ctx, tx, sqlite.UpsertCorporationParams{
+		corp, err = r.queries.UpsertCorporation(ctx, tx, appdb.UpsertCorporationParams{
 			ID:         corpID,
 			Name:       name,
 			Ticker:     ticker,
@@ -165,7 +165,7 @@ func (r *AppSqliteRepository) UpsertAlliance(ctx context.Context, allyID int64, 
 	level.Debug(logger).Message("calling UpsertAlliance", keys.AllianceID, allyID, keys.AllianceName, name, keys.AlliancePicture, picture, keys.AllianceTicker, ticker)
 
 	inner := func(ctx context.Context, tx database.Tx) error {
-		ally, err = r.queries.UpsertAlliance(ctx, tx, sqlite.UpsertAllianceParams{
+		ally, err = r.queries.UpsertAlliance(ctx, tx, appdb.UpsertAllianceParams{
 			ID:      sql.NullInt64{Int64: allyID, Valid: true},
 			Name:    sql.NullString{String: name, Valid: true},
 			Ticker:  sql.NullString{String: ticker, Valid: true},
@@ -190,7 +190,7 @@ func (r *AppSqliteRepository) UpsertToken(ctx context.Context, charID int64, acc
 	level.Debug(logger).Message("calling UpsertToken", keys.CharacterID, charID)
 
 	inner := func(ctx context.Context, tx database.Tx) error {
-		tok, err = r.queries.UpsertToken(ctx, tx, sqlite.UpsertTokenParams{
+		tok, err = r.queries.UpsertToken(ctx, tx, appdb.UpsertTokenParams{
 			CharacterID:  charID,
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
@@ -276,7 +276,7 @@ func (r *AppSqliteRepository) UpsertCharacterSkill(ctx context.Context, charID, 
 	level.Debug(logger).Message("calling UpsertCharacterSkill", keys.CharacterID, charID)
 
 	inner := func(ctx context.Context, tx database.Tx) error {
-		skill, err = r.queries.UpsertCharacterSkill(ctx, tx, sqlite.UpsertCharacterSkillParams{
+		skill, err = r.queries.UpsertCharacterSkill(ctx, tx, appdb.UpsertCharacterSkillParams{
 			CharacterID: charID,
 			SkillID:     skillID,
 			SkillLevel:  skillLevel,
@@ -300,7 +300,7 @@ func (r *AppSqliteRepository) DeleteCharacterSkills(ctx context.Context, charID 
 	level.Debug(logger).Message("calling DeleteCharacterSkills", keys.CharacterID, charID, keys.SkillID, skillIDs)
 
 	inner := func(ctx context.Context, tx database.Tx) error {
-		err = r.queries.DeleteCharacterSkills(ctx, tx, sqlite.DeleteCharacterSkillsParams{
+		err = r.queries.DeleteCharacterSkills(ctx, tx, appdb.DeleteCharacterSkillsParams{
 			CharacterID: charID,
 			SkillIds:    skillIDs,
 		})
@@ -342,14 +342,15 @@ func (r *AppSqliteRepository) InsertTag(ctx context.Context, name string, c colo
 	logger := r.deps.Logger()
 	level.Debug(logger).Message("calling InsertTag", keys.TagName, name)
 
-	cr, cg, cb, _ := c.RGBA()
+	cr, cg, cb, ca := c.RGBA()
 
 	inner := func(ctx context.Context, tx database.Tx) error {
-		tag, err = r.queries.InsertTag(ctx, tx, sqlite.InsertTagParams{
+		tag, err = r.queries.InsertTag(ctx, tx, appdb.InsertTagParams{
 			Name:   name,
 			ColorR: int64(cr),
 			ColorG: int64(cg),
 			ColorB: int64(cb),
+			ColorA: int64(ca),
 		})
 		return errors.Wrap(err, "could not InsertTag")
 	}
@@ -369,15 +370,16 @@ func (r *AppSqliteRepository) UpdateTag(ctx context.Context, tagID int64, name s
 	logger := r.deps.Logger()
 	level.Debug(logger).Message("calling UpdateTag", keys.TagID, tagID, keys.TagName, name)
 
-	cr, cg, cb, _ := c.RGBA()
+	cr, cg, cb, ca := c.RGBA()
 
 	inner := func(ctx context.Context, tx database.Tx) error {
-		err = r.queries.UpdateTag(ctx, tx, sqlite.UpdateTagParams{
+		err = r.queries.UpdateTag(ctx, tx, appdb.UpdateTagParams{
 			ID:     tagID,
 			Name:   name,
 			ColorR: int64(cr),
 			ColorG: int64(cg),
 			ColorB: int64(cb),
+			ColorA: int64(ca),
 		})
 		return errors.Wrap(err, "could not UpdateTag")
 	}
@@ -461,7 +463,7 @@ func (r *AppSqliteRepository) UpsertTagSkill(ctx context.Context, tagID, skillID
 	level.Debug(logger).Message("calling UpsertTagSkill", keys.TagID, tagID)
 
 	inner := func(ctx context.Context, tx database.Tx) error {
-		skill, err = r.queries.UpsertTagSkill(ctx, tx, sqlite.UpsertTagSkillParams{
+		skill, err = r.queries.UpsertTagSkill(ctx, tx, appdb.UpsertTagSkillParams{
 			TagID:      tagID,
 			SkillID:    skillID,
 			SkillLevel: skillLevel,
@@ -485,7 +487,7 @@ func (r *AppSqliteRepository) DeleteTagSkills(ctx context.Context, tagID int64, 
 	level.Debug(logger).Message("calling DeleteTagSkills", keys.TagID, tagID, keys.SkillID, skillIDs)
 
 	inner := func(ctx context.Context, tx database.Tx) error {
-		err = r.queries.DeleteTagSkills(ctx, tx, sqlite.DeleteTagSkillsParams{
+		err = r.queries.DeleteTagSkills(ctx, tx, appdb.DeleteTagSkillsParams{
 			TagID:    tagID,
 			SkillIds: skillIDs,
 		})
