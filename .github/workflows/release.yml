@@ -32,14 +32,19 @@ jobs:
 
       - name: Build
         run: |
+          set -euo pipefail
           export PATH="$(go env GOPATH)/bin:$PATH"
           ./bin/ctl build release windows \*
+          mv fyne-cross/dist/windows-amd64/EVEAlts.exe.zip fyne-cross/dist/windows-amd64/EVEAlts-windows-amd64.exe.zip
+          mv fyne-cross/dist/windows-arm64/EVEAlts.exe.zip fyne-cross/dist/windows-arm64/EVEAlts-windows-arm64.exe.zip
+          mv fyne-cross/dist/windows-386/EVEAlts.exe.zip fyne-cross/dist/windows-386/EVEAlts-windows-386.exe.zip
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
+          fail_on_unmatched_files: true
           files: |
-            fyne-cross/dist/windows-amd64/EVEAlts.exe.zip
-            fyne-cross/dist/windows-arm64/EVEAlts.exe.zip
-            fyne-cross/dist/windows-386/EVEAlts.exe.zip
+            fyne-cross/dist/windows-amd64/EVEAlts-windows-amd64.exe.zip
+            fyne-cross/dist/windows-arm64/EVEAlts-windows-arm64.exe.zip
+            fyne-cross/dist/windows-386/EVEAlts-windows-386.exe.zip
