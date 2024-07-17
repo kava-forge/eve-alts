@@ -39,3 +39,4 @@ static/dist
 fyne-cross
 cmd/*/fyne_metadata_init.go
 .cache
+pkg/esi/staticdata.sqlite

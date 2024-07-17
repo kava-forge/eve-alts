@@ -34,6 +34,9 @@ func run() error {
 
 	fs := flag.NewFlagSet(AppName, flag.ContinueOnError)
 	fs.StringVar(&databaseFile, "database", "", "The database to clean")
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		return errors.Wrap(err, "could not parse args")
+	}
 
 	ctx := context.Background()
 
@@ -43,6 +46,8 @@ func run() error {
 	}
 	defer deferutil.CheckDefer(func() error { return deps.Telemetry().Shutdown(ctx) })
 
+	level.Debug(deps.Logger()).Message("database file", "fname", databaseFile, "cwd", os.Getenv("PWD"), "args", os.Args)
+
 	level.Debug(deps.Logger()).Message("creating repo")
 	repo := repository.NewStaticData(deps)
 	level.Debug(deps.Logger()).Message("getting table names")
@@ -50,6 +55,7 @@ func run() error {
 	if err != nil {
 		return errors.Wrap(err, "could not get table names")
 	}
+	level.Debug(deps.Logger()).Message("got tables", "names", names)
 
 	for _, n := range names {
 		switch n {
@@ -65,7 +71,7 @@ func run() error {
 
 	if _, err := deps.StaticDB().ExecContext(ctx, `
 CREATE INDEX IF NOT EXISTS "idx_translations_by_name" 
-ON "trnTranslations" ("tcID", "languageID", LOWER("text"))
+ON trnTranslations ("tcID", "languageID", LOWER("text"))
 WHERE "tcID" = 8;
 		`); err != nil {
 		return errors.Wrap(err, "could not create index")
