@@ -35,7 +35,7 @@ func main() {
 	maybeEnableFyneLog(home)
 
 	ctx := context.Background()
-	err := run(ctx, os.Args)
+	err := run(ctx, os.Args[1:])
 	if err != nil {
 		panic(err)
 	}
