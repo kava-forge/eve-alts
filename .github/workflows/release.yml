@@ -24,6 +24,7 @@ jobs:
       - name: Build
         run: |
           go install github.com/fyne-io/fyne-cross
+          export PATH="$(go env GOPATH)/bin:$PATH"
           ./bin/ctl build release windows \*
 
       - name: Release
