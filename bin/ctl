@@ -362,12 +362,15 @@ _build() {
             ;;
     esac
 
+    local engine
+    can podman && engine="podman" || engine="docker"
+
     (
         cd "$REPO_ROOT"
         
         set -x
         fyne-cross "$target" \
-            -engine=podman \
+            -engine="$engine" \
             -arch="$arch" \
             -tags="$BUILD_TAGS" \
             -app-version="$(echo -n "$VERSION" | sed 's!^v!!')" \
