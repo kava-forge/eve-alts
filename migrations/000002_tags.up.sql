@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS tags (
     "color_r" INTEGER NOT NULL,
     "color_g" INTEGER NOT NULL,
     "color_b" INTEGER NOT NULL
+    -- , "color_a" INTEGER NOT NULL -- not really at this level, but for sqlc
 );
 
 CREATE TABLE IF NOT EXISTS tag_skills (
