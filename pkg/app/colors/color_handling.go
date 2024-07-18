@@ -1,4 +1,4 @@
-package app
+package colors
 
 import (
 	"image/color"

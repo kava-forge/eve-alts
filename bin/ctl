@@ -270,6 +270,14 @@ db:shell() {
     sqlite3 "$HOME/Library/Application Support/evealts/$dbenv.db"
 }
 
+db:migrate() {
+    dispatch "migrate" "$USAGE_DB" "$@"
+}
+
+migrate:new() {
+    migrate create -dir migrations -seq -ext sql "$@"
+}
+
 command:dev() {
     : "${BUILD_TAGS:=}"
     export BUILD_TAGS

@@ -1,4 +1,4 @@
-package app
+package characters
 
 import (
 	"context"
@@ -12,38 +12,42 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+
 	"github.com/kava-forge/eve-alts/lib/logging"
 	"github.com/kava-forge/eve-alts/lib/logging/level"
 
+	"github.com/kava-forge/eve-alts/pkg/app/apperrors"
+	"github.com/kava-forge/eve-alts/pkg/app/bindings"
+	"github.com/kava-forge/eve-alts/pkg/app/minitag"
 	"github.com/kava-forge/eve-alts/pkg/keys"
 	"github.com/kava-forge/eve-alts/pkg/repository"
 )
 
 type CharacterMiniTag struct {
-	*MiniTag
+	*minitag.MiniTag
 
 	deps    dependencies
 	parent  fyne.Window
-	char    DataProxy[*repository.CharacterDBData]
-	tag     DataProxy[*repository.TagDBData]
+	char    bindings.DataProxy[*repository.CharacterDBData]
+	tag     bindings.DataProxy[*repository.TagDBData]
 	isMatch bool
 	missing []string
 }
 
-func NewCharacterMiniTag(deps dependencies, parent fyne.Window, char DataProxy[*repository.CharacterDBData], tag DataProxy[*repository.TagDBData]) *CharacterMiniTag {
+func NewCharacterMiniTag(deps dependencies, parent fyne.Window, char bindings.DataProxy[*repository.CharacterDBData], tag bindings.DataProxy[*repository.TagDBData]) *CharacterMiniTag {
 	logger := logging.With(deps.Logger(), keys.Component, "CharacterMiniTag")
 
 	tagData, err := tag.Get()
 	if err != nil {
-		ShowError(logger, parent, AppError(
+		apperrors.Show(logger, parent, apperrors.Error(
 			"Could not find tag data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return nil
 	}
 
 	cmt := &CharacterMiniTag{
-		MiniTag: NewMiniTag(logger, tagData.Tag.Name, tagData.Color(), theme.SizeNameCaptionText),
+		MiniTag: minitag.New(logger, tagData.Tag.Name, tagData.Color(), theme.SizeNameCaptionText),
 		deps:    deps,
 		parent:  parent,
 		char:    char,
@@ -65,9 +69,9 @@ func (c *CharacterMiniTag) redraw() {
 
 	tag, err := c.tag.Get()
 	if err != nil || tag == nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find tag data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -76,9 +80,9 @@ func (c *CharacterMiniTag) redraw() {
 
 	char, err := c.char.Get()
 	if err != nil || char == nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find character data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -96,7 +100,7 @@ func (c *CharacterMiniTag) redraw() {
 	c.ColorSwatch.SetColor(tag.Color())
 	c.isMatch = isMatch
 	c.MiniTag.Dimmed = !c.isMatch
-	c.refreshStyle()
+	c.RefreshStyle()
 
 	ids := make([]int64, 0, len(missing))
 	for _, sk := range missing {
@@ -105,9 +109,9 @@ func (c *CharacterMiniTag) redraw() {
 
 	names, err := c.deps.StaticRepo().BatchGetSkillNames(context.Background(), ids, nil)
 	if err != nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find load skill names",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -128,9 +132,9 @@ func (c *CharacterMiniTag) ShouldShow() bool {
 
 	tag, err := c.tag.Get()
 	if err != nil || tag == nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find tag data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return false
 	}
@@ -139,9 +143,9 @@ func (c *CharacterMiniTag) ShouldShow() bool {
 
 	char, err := c.char.Get()
 	if err != nil || char == nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find character data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return false
 	}
@@ -158,9 +162,9 @@ func (c *CharacterMiniTag) SortKey() string {
 
 	tag, err := c.tag.Get()
 	if err != nil || tag == nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find tag data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return ""
 	}

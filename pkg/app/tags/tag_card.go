@@ -1,4 +1,4 @@
-package app
+package tags
 
 import (
 	"context"
@@ -9,9 +9,13 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+
 	"github.com/kava-forge/eve-alts/lib/logging"
 	"github.com/kava-forge/eve-alts/lib/logging/level"
 
+	"github.com/kava-forge/eve-alts/pkg/app/apperrors"
+	"github.com/kava-forge/eve-alts/pkg/app/bindings"
+	"github.com/kava-forge/eve-alts/pkg/app/colors"
 	"github.com/kava-forge/eve-alts/pkg/keys"
 	"github.com/kava-forge/eve-alts/pkg/repository"
 )
@@ -20,23 +24,23 @@ type TagCard struct {
 	widget.BaseWidget
 
 	deps   dependencies
-	tag    DataProxy[*repository.TagDBData]
+	tag    bindings.DataProxy[*repository.TagDBData]
 	parent fyne.Window
 
 	NameLabel    *widget.RichText
-	ColorSwatch  *ColorSwatch
+	ColorSwatch  *colors.ColorSwatch
 	EditButton   *widget.Button
 	DeleteButton *widget.Button
 }
 
-func NewTagCard(deps dependencies, parent fyne.Window, dataTag DataProxy[*repository.TagDBData], deleteFunc func(c *TagCard), editFunc func(DataProxy[*repository.TagDBData], func())) *TagCard {
+func NewTagCard(deps dependencies, parent fyne.Window, dataTag bindings.DataProxy[*repository.TagDBData], deleteFunc func(c *TagCard), editFunc func(bindings.DataProxy[*repository.TagDBData], func())) *TagCard {
 	logger := logging.With(deps.Logger(), keys.Component, "TagCard")
 
 	tag, err := dataTag.Get()
 	if err != nil {
-		ShowError(logger, parent, AppError(
+		apperrors.Show(logger, parent, apperrors.Error(
 			"Could not find tag data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return nil
 	}
@@ -49,7 +53,7 @@ func NewTagCard(deps dependencies, parent fyne.Window, dataTag DataProxy[*reposi
 		parent: parent,
 
 		NameLabel:   widget.NewRichTextWithText(tag.Tag.Name),
-		ColorSwatch: NewColorSwatch(deps.Logger(), tag.Color()),
+		ColorSwatch: colors.NewColorSwatch(deps.Logger(), tag.Color()),
 		// EditButton:   widget.NewButtonWithIcon("edit", theme.SettingsIcon(), nil),
 		// DeleteButton: widget.NewButtonWithIcon("delete", theme.DeleteIcon(), nil),
 		EditButton:   widget.NewButton("edit", nil),
@@ -57,7 +61,7 @@ func NewTagCard(deps dependencies, parent fyne.Window, dataTag DataProxy[*reposi
 	}
 	cc.ExtendBaseWidget(cc)
 
-	cc.refreshStyle()
+	cc.RefreshStyle()
 	cc.ColorSwatch.SetCornerRadius(theme.InnerPadding() / 2)
 
 	cc.EditButton.OnTapped = cc.editTag(editFunc)
@@ -69,7 +73,11 @@ func NewTagCard(deps dependencies, parent fyne.Window, dataTag DataProxy[*reposi
 	return cc
 }
 
-func (c *TagCard) refreshStyle() {
+func (c *TagCard) Parent() fyne.Window {
+	return c.parent
+}
+
+func (c *TagCard) RefreshStyle() {
 	defer c.NameLabel.Refresh()
 
 	c.NameLabel.Wrapping = fyne.TextWrapOff
@@ -79,13 +87,13 @@ func (c *TagCard) refreshStyle() {
 	var darkText, lightText fyne.ThemeColorName
 	if fyne.CurrentApp().Settings().ThemeVariant() == theme.VariantLight {
 		darkText = theme.ColorNameForeground
-		lightText = ColorNameInvertedForeground
+		lightText = colors.ColorNameInvertedForeground
 	} else {
 		lightText = theme.ColorNameForeground
-		darkText = ColorNameInvertedForeground
+		darkText = colors.ColorNameInvertedForeground
 	}
 
-	if UseDarkText(c.ColorSwatch.Color()) {
+	if colors.UseDarkText(c.ColorSwatch.Color()) {
 		textColorName = darkText
 	} else {
 		textColorName = lightText
@@ -125,9 +133,9 @@ func (c *TagCard) redraw() {
 
 	tag, err := c.tag.Get()
 	if err != nil || tag == nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find tag data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -138,7 +146,7 @@ func (c *TagCard) redraw() {
 
 	c.SetText(tag.Tag.Name)
 	c.ColorSwatch.SetColor(tag.Color())
-	c.refreshStyle()
+	c.RefreshStyle()
 }
 
 func (c *TagCard) TagID() int64 {
@@ -146,9 +154,9 @@ func (c *TagCard) TagID() int64 {
 
 	tag, err := c.tag.Get()
 	if err != nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find tag data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return 0
 	}
@@ -159,7 +167,7 @@ func (c *TagCard) RefreshDataWith(tag repository.TagDBData) error {
 	return c.tag.Set(&tag)
 }
 
-func (c *TagCard) editTag(editFunc func(DataProxy[*repository.TagDBData], func())) func() {
+func (c *TagCard) editTag(editFunc func(bindings.DataProxy[*repository.TagDBData], func())) func() {
 	return func() {
 		c.EditButton.Disable()
 
@@ -178,9 +186,9 @@ func (c *TagCard) deleteTag(callback func(*TagCard)) func() {
 
 		tag, err := c.tag.Get()
 		if err != nil {
-			ShowError(logger, c.parent, AppError(
+			apperrors.Show(logger, c.parent, apperrors.Error(
 				"Could not find tag data",
-				WithCause(err),
+				apperrors.WithCause(err),
 			), nil)
 			return
 		}
@@ -194,9 +202,9 @@ func (c *TagCard) deleteTag(callback func(*TagCard)) func() {
 			}
 
 			if err := c.deps.AppRepo().DeleteTag(ctx, c.TagID(), nil); err != nil {
-				ShowError(logger, c.parent, AppError(
+				apperrors.Show(logger, c.parent, apperrors.Error(
 					"Could not delete tag",
-					WithCause(err),
+					apperrors.WithCause(err),
 				), nil)
 			} else {
 				callback(c)

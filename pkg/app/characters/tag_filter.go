@@ -1,4 +1,4 @@
-package app
+package characters
 
 import (
 	"fyne.io/fyne/v2"
@@ -6,7 +6,10 @@ import (
 
 	"github.com/kava-forge/eve-alts/lib/logging"
 	"github.com/kava-forge/eve-alts/lib/logging/level"
-
+	"github.com/kava-forge/eve-alts/pkg/app/apperrors"
+	"github.com/kava-forge/eve-alts/pkg/app/bindings"
+	"github.com/kava-forge/eve-alts/pkg/app/minitag"
+	"github.com/kava-forge/eve-alts/pkg/app/tags"
 	"github.com/kava-forge/eve-alts/pkg/keys"
 	"github.com/kava-forge/eve-alts/pkg/repository"
 )
@@ -14,25 +17,25 @@ import (
 type TagFilter struct {
 	deps               dependencies
 	parent             fyne.Window
-	tags               *DataList[*repository.TagDBData]
-	TagSet             *MiniTagSet[string, *TagMiniTag]
-	tagState           *DataMap[bool]
+	tags               *bindings.DataList[*repository.TagDBData]
+	TagSet             *minitag.MiniTagSet[string, *tags.TagMiniTag]
+	tagState           *bindings.DataMap[bool]
 	attachedCharacters []*CharacterCard
 }
 
-func NewTagFilter(deps dependencies, parent fyne.Window, tags *DataList[*repository.TagDBData]) *TagFilter {
+func NewTagFilter(deps dependencies, parent fyne.Window, tagsData *bindings.DataList[*repository.TagDBData]) *TagFilter {
 	tf := &TagFilter{
 		deps:   deps,
 		parent: parent,
-		tags:   tags,
+		tags:   tagsData,
 
-		TagSet:   NewMiniTagSet[string, *TagMiniTag](),
-		tagState: NewDataMap[bool](),
+		TagSet:   minitag.NewMiniTagSet[string, *tags.TagMiniTag](),
+		tagState: bindings.NewDataMap[bool](),
 	}
 
 	tf.update()
 
-	tags.AddListener(binding.NewDataListener(tf.update))
+	tagsData.AddListener(binding.NewDataListener(tf.update))
 
 	return tf
 }
@@ -44,9 +47,9 @@ func (tf *TagFilter) update() {
 
 	tagsList, err := tf.tags.Get()
 	if err != nil {
-		ShowError(logger, tf.parent, AppError(
+		apperrors.Show(logger, tf.parent, apperrors.Error(
 			"Could not load tag list data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -72,9 +75,9 @@ func (tf *TagFilter) update() {
 
 // 	data, err := tf.tagState.Get()
 // 	if err != nil {
-// 		ShowError(logger, tf.parent, AppError(
+// 		apperrors.Show(logger, tf.parent, apperrors.Error(
 // 			"Could not load tag data",
-// 			WithCause(err),
+// 			apperrors.WithCause(err),
 // 		), nil)
 // 		return
 // 	}
@@ -94,16 +97,16 @@ func (tf *TagFilter) update() {
 // 	}
 // }
 
-func (tf *TagFilter) Add(tagData DataProxy[*repository.TagDBData]) {
+func (tf *TagFilter) Add(tagData bindings.DataProxy[*repository.TagDBData]) {
 	defer tf.TagSet.Refresh()
 
 	logger := logging.With(tf.deps.Logger(), keys.Component, "TagFilter.Add")
 
 	tag, err := tagData.Get()
 	if err != nil {
-		ShowError(logger, tf.parent, AppError(
+		apperrors.Show(logger, tf.parent, apperrors.Error(
 			"Could not load tag data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -111,9 +114,9 @@ func (tf *TagFilter) Add(tagData DataProxy[*repository.TagDBData]) {
 	logger = logging.With(logger, keys.TagID, tag.Tag.ID, keys.TagName, tag.Tag.Name)
 
 	if err := tf.tagState.SetValue(tag.StrID(), false); err != nil {
-		ShowError(logger, tf.parent, AppError(
+		apperrors.Show(logger, tf.parent, apperrors.Error(
 			"Could not set filter state",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -121,7 +124,7 @@ func (tf *TagFilter) Add(tagData DataProxy[*repository.TagDBData]) {
 	level.Debug(logger).Message("adding mini tag")
 
 	stateChild := tf.tagState.Child(tag.StrID())
-	tmt := NewTagMiniTag(tf.deps, tf.parent, tagData, stateChild)
+	tmt := tags.NewTagMiniTag(tf.deps, tf.parent, tagData, stateChild)
 	tf.TagSet.Add(tmt)
 
 	// tf.resetIfAllOff()
@@ -143,7 +146,7 @@ func (tf *TagFilter) AttachAllToCharacter(cc *CharacterCard) {
 	tf.attachedCharacters = append(tf.attachedCharacters, cc)
 }
 
-func (tf *TagFilter) AttachToCharacter(cc *CharacterCard, tagID string, tagSelected DataProxy[bool]) {
+func (tf *TagFilter) AttachToCharacter(cc *CharacterCard, tagID string, tagSelected bindings.DataProxy[bool]) {
 	logger := logging.With(tf.deps.Logger(), keys.Component, "TagFilter.AttachToCharacter")
 
 	level.Info(logger).Message("attaching to character", "tag_id", tagID)
@@ -152,9 +155,9 @@ func (tf *TagFilter) AttachToCharacter(cc *CharacterCard, tagID string, tagSelec
 		level.Debug(logger).Message("refreshing character for filter change")
 		selected, err := tagSelected.Get()
 		if err != nil {
-			ShowError(logger, tf.parent, AppError(
+			apperrors.Show(logger, tf.parent, apperrors.Error(
 				"Could not get filter state",
-				WithCause(err),
+				apperrors.WithCause(err),
 			), nil)
 			return
 		}

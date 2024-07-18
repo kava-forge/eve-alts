@@ -1,4 +1,4 @@
-package app
+package minitag
 
 import (
 	"cmp"
@@ -26,6 +26,10 @@ func NewMiniTagSet[S cmp.Ordered, T MiniTagSetItem[S]]() *MiniTagSet[S, T] {
 	ts := &MiniTagSet[S, T]{}
 	ts.ExtendBaseWidget(ts)
 	return ts
+}
+
+func (c *MiniTagSet[S, T]) Items() []T {
+	return c.items
 }
 
 func (c *MiniTagSet[S, T]) Len() int {

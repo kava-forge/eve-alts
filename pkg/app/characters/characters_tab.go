@@ -1,4 +1,4 @@
-package app
+package characters
 
 import (
 	"fmt"
@@ -7,14 +7,16 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
+
 	"github.com/kava-forge/eve-alts/lib/logging"
 	"github.com/kava-forge/eve-alts/lib/logging/level"
-
+	"github.com/kava-forge/eve-alts/pkg/app/apperrors"
+	"github.com/kava-forge/eve-alts/pkg/app/bindings"
 	"github.com/kava-forge/eve-alts/pkg/keys"
 	"github.com/kava-forge/eve-alts/pkg/repository"
 )
 
-func NewCharactersTab(deps dependencies, parent fyne.Window, tags *DataList[*repository.TagDBData]) (fyne.CanvasObject, *DataList[*repository.CharacterDBData]) {
+func NewCharactersTab(deps dependencies, parent fyne.Window, tags *bindings.DataList[*repository.TagDBData]) (fyne.CanvasObject, *bindings.DataList[*repository.CharacterDBData]) {
 	logger := logging.With(deps.Logger(), keys.Component, "MainWindow.CharactersTab")
 
 	tagFilters := NewTagFilter(deps, parent, tags)
@@ -22,7 +24,7 @@ func NewCharactersTab(deps dependencies, parent fyne.Window, tags *DataList[*rep
 	charLout := layout.NewGridWrapLayout(fyne.Size{Width: 500, Height: 128})
 	charContainer := container.New(charLout)
 
-	chars := NewDataList[*repository.CharacterDBData]()
+	chars := bindings.NewDataList[*repository.CharacterDBData]()
 	chars.AddListener(binding.NewDataListener(func() {
 		defer charContainer.Refresh()
 
@@ -39,9 +41,9 @@ func NewCharactersTab(deps dependencies, parent fyne.Window, tags *DataList[*rep
 
 		charList, err := chars.Get()
 		if err != nil {
-			ShowError(logger, parent, AppError(
+			apperrors.Show(logger, parent, apperrors.Error(
 				"Could not find character list data",
-				WithCause(err),
+				apperrors.WithCause(err),
 			), nil)
 			return
 		}
@@ -59,9 +61,9 @@ func NewCharactersTab(deps dependencies, parent fyne.Window, tags *DataList[*rep
 				level.Debug(logger).Message("refreshing character", "index", idx)
 				delete(toDelete, char.Character.ID)
 				if err := charContainer.Objects[idx].(*CharacterCard).RefreshDataWith(*char); err != nil {
-					ShowError(logger, parent, AppError(
+					apperrors.Show(logger, parent, apperrors.Error(
 						"Could not set character data",
-						WithCause(err),
+						apperrors.WithCause(err),
 					), nil)
 				}
 				continue
@@ -71,17 +73,17 @@ func NewCharactersTab(deps dependencies, parent fyne.Window, tags *DataList[*rep
 				level.Debug(logger).Message("removing character card")
 				char, err := chars.GetValue(i)
 				if err != nil {
-					ShowError(logger, c.parent, AppError(
+					apperrors.Show(logger, c.Parent(), apperrors.Error(
 						"Could not find character data",
-						WithCause(err),
+						apperrors.WithCause(err),
 					), nil)
 					return
 				}
 				char.Character.ID = 0
 				if err := chars.SetValue(i, char); err != nil {
-					ShowError(logger, c.parent, AppError(
+					apperrors.Show(logger, c.Parent(), apperrors.Error(
 						"Could not delete character",
-						WithCause(err),
+						apperrors.WithCause(err),
 					), nil)
 					return
 				}

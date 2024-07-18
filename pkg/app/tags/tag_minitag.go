@@ -1,39 +1,43 @@
-package app
+package tags
 
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
+
 	"github.com/kava-forge/eve-alts/lib/logging"
 	"github.com/kava-forge/eve-alts/lib/logging/level"
 
+	"github.com/kava-forge/eve-alts/pkg/app/apperrors"
+	"github.com/kava-forge/eve-alts/pkg/app/bindings"
+	"github.com/kava-forge/eve-alts/pkg/app/minitag"
 	"github.com/kava-forge/eve-alts/pkg/keys"
 	"github.com/kava-forge/eve-alts/pkg/repository"
 )
 
 type TagMiniTag struct {
-	*MiniTag
+	*minitag.MiniTag
 
 	deps     dependencies
 	parent   fyne.Window
-	tag      DataProxy[*repository.TagDBData]
-	selected DataProxy[bool]
+	tag      bindings.DataProxy[*repository.TagDBData]
+	selected bindings.DataProxy[bool]
 }
 
-func NewTagMiniTag(deps dependencies, parent fyne.Window, tagData DataProxy[*repository.TagDBData], selected DataProxy[bool]) *TagMiniTag {
+func NewTagMiniTag(deps dependencies, parent fyne.Window, tagData bindings.DataProxy[*repository.TagDBData], selected bindings.DataProxy[bool]) *TagMiniTag {
 	logger := logging.With(deps.Logger(), keys.Component, "TagMiniTag")
 
 	tag, err := tagData.Get()
 	if err != nil {
-		ShowError(logger, parent, AppError(
+		apperrors.Show(logger, parent, apperrors.Error(
 			"Could not find tag data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return nil
 	}
 
 	tmt := &TagMiniTag{
-		MiniTag:  NewMiniTag(logger, tag.Tag.Name, tag.Color(), theme.SizeNameText),
+		MiniTag:  minitag.New(logger, tag.Tag.Name, tag.Color(), theme.SizeNameText),
 		deps:     deps,
 		parent:   parent,
 		tag:      tagData,
@@ -57,9 +61,9 @@ func (c *TagMiniTag) redraw() {
 
 	tag, err := c.tag.Get()
 	if err != nil || tag == nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find tag data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -74,9 +78,9 @@ func (c *TagMiniTag) redraw() {
 
 	selected, err := c.selected.Get()
 	if err != nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find selected state data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -86,7 +90,7 @@ func (c *TagMiniTag) redraw() {
 	c.SetText(tag.Tag.Name)
 	c.ColorSwatch.SetColor(tag.Color())
 	c.MiniTag.Dimmed = !selected
-	c.refreshStyle()
+	c.RefreshStyle()
 	c.MiniTag.Resize(c.MiniTag.Size())
 }
 
@@ -95,9 +99,9 @@ func (c *TagMiniTag) ShouldShow() bool {
 
 	tag, err := c.tag.Get()
 	if err != nil || tag == nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find tag data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return false
 	}
@@ -116,9 +120,9 @@ func (c *TagMiniTag) SortKey() string {
 
 	tag, err := c.tag.Get()
 	if err != nil || tag == nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find tag data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return ""
 	}
@@ -134,17 +138,17 @@ func (c *TagMiniTag) Tapped(_ *fyne.PointEvent) {
 
 	selected, err := c.selected.Get()
 	if err != nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find selected state data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
 
 	if err := c.selected.Set(!selected); err != nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not toggle tag selection",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 	}
 }

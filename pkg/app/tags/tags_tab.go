@@ -1,4 +1,4 @@
-package app
+package tags
 
 import (
 	"fmt"
@@ -7,21 +7,24 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
+
 	"github.com/kava-forge/eve-alts/lib/logging"
 	"github.com/kava-forge/eve-alts/lib/logging/level"
 
+	"github.com/kava-forge/eve-alts/pkg/app/apperrors"
+	"github.com/kava-forge/eve-alts/pkg/app/bindings"
 	"github.com/kava-forge/eve-alts/pkg/keys"
 	"github.com/kava-forge/eve-alts/pkg/repository"
 )
 
-func NewTagsTab(deps dependencies, parent fyne.Window) (fyne.CanvasObject, *DataList[*repository.TagDBData]) {
+func NewTagsTab(deps dependencies, parent fyne.Window) (fyne.CanvasObject, *bindings.DataList[*repository.TagDBData]) {
 	logger := logging.With(deps.Logger(), keys.Component, "MainWindow.TagsTab")
 
 	lout := layout.NewGridWrapLayout(fyne.Size{Width: 250, Height: 50})
 	ctn := container.New(lout)
 
-	tags := NewDataList[*repository.TagDBData]()
-	tags.AddListener(binding.NewDataListener(func() {
+	tagsData := bindings.NewDataList[*repository.TagDBData]()
+	tagsData.AddListener(binding.NewDataListener(func() {
 		defer func() {
 			level.Debug(logger).Message("tags listener done")
 		}()
@@ -30,8 +33,8 @@ func NewTagsTab(deps dependencies, parent fyne.Window) (fyne.CanvasObject, *Data
 		level.Debug(logger).Message("tags listener start")
 
 		level.Debug(logger).Message("refreshing tags shown")
-		tagsShown := make(map[int64]int, tags.Length())
-		toDelete := make(map[int64]int, tags.Length())
+		tagsShown := make(map[int64]int, tagsData.Length())
+		toDelete := make(map[int64]int, tagsData.Length())
 
 		for i, o := range ctn.Objects {
 			if c, ok := o.(*TagCard); ok {
@@ -40,11 +43,11 @@ func NewTagsTab(deps dependencies, parent fyne.Window) (fyne.CanvasObject, *Data
 			}
 		}
 
-		tagList, err := tags.Get()
+		tagList, err := tagsData.Get()
 		if err != nil {
-			ShowError(logger, parent, AppError(
+			apperrors.Show(logger, parent, apperrors.Error(
 				"Could not find tag list data",
-				WithCause(err),
+				apperrors.WithCause(err),
 			), nil)
 			return
 		}
@@ -62,34 +65,34 @@ func NewTagsTab(deps dependencies, parent fyne.Window) (fyne.CanvasObject, *Data
 				level.Debug(logger).Message("refreshing tag", keys.TagID, tag.Tag.ID, "index", idx)
 				delete(toDelete, tag.Tag.ID)
 				if err := ctn.Objects[idx].(*TagCard).RefreshDataWith(*tag); err != nil {
-					ShowError(logger, parent, AppError(
+					apperrors.Show(logger, parent, apperrors.Error(
 						"Could not set tags data",
-						WithCause(err),
+						apperrors.WithCause(err),
 					), nil)
 				}
 				continue
 			}
 
-			cc := NewTagCard(deps, parent, tags.Child(i), func(c *TagCard) {
+			cc := NewTagCard(deps, parent, tagsData.Child(i), func(c *TagCard) {
 				level.Debug(logger).Message("removing tag card")
-				tag, err := tags.GetValue(i) //nolint:govet // intentional
+				tag, err := tagsData.GetValue(i) //nolint:govet // intentional
 				if err != nil {
-					ShowError(logger, c.parent, AppError(
+					apperrors.Show(logger, c.Parent(), apperrors.Error(
 						"Could not find tag data",
-						WithCause(err),
+						apperrors.WithCause(err),
 					), nil)
 					return
 				}
 				tag.Tag.ID = 0
-				if err := tags.SetValue(i, tag); err != nil {
-					ShowError(logger, c.parent, AppError(
+				if err := tagsData.SetValue(i, tag); err != nil {
+					apperrors.Show(logger, c.Parent(), apperrors.Error(
 						"Could not delete tag",
-						WithCause(err),
+						apperrors.WithCause(err),
 					), nil)
 				}
 				ctn.Remove(c)
-			}, func(tagData DataProxy[*repository.TagDBData], onClose func()) {
-				w := NewTagEditor(deps, fyne.CurrentApp(), "Edit Tag", tags, tagData, onClose)
+			}, func(tagData bindings.DataProxy[*repository.TagDBData], onClose func()) {
+				w := NewTagEditor(deps, fyne.CurrentApp(), "Edit Tag", tagsData, tagData, onClose)
 				w.Show()
 			})
 			level.Debug(logger).Message("adding new tag", keys.TagID, tag.Tag.ID, "cc", fmt.Sprintf("%#v", cc))
@@ -102,7 +105,7 @@ func NewTagsTab(deps dependencies, parent fyne.Window) (fyne.CanvasObject, *Data
 		}
 	}))
 
-	ctn.Add(NewAddTagButton(deps, tags))
+	ctn.Add(NewAddTagButton(deps, tagsData))
 
-	return container.NewVScroll(ctn), tags
+	return container.NewVScroll(ctn), tagsData
 }

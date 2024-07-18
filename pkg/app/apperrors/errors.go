@@ -1,4 +1,4 @@
-package app
+package apperrors
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ var (
 	_ PublicErr = (*appError)(nil)
 )
 
-func AppError(message string, opts ...ErrorOption) *appError { //nolint:revive // don't nind returning unexported here
+func Error(message string, opts ...ErrorOption) *appError { //nolint:revive // don't nind returning unexported here
 	err := &appError{
 		message: message,
 	}
@@ -68,7 +68,7 @@ func (e *appError) Unwrap() error {
 
 func (e *appError) Cause() error { return e.cause }
 
-func ShowError(logger logging.Logger, parent fyne.Window, err PublicErr, onClosed func()) {
+func Show(logger logging.Logger, parent fyne.Window, err PublicErr, onClosed func()) {
 	level.Error(logger).Err("application error", err.InternalError())
 	d := dialog.NewError(err, parent)
 	d.SetOnClosed(func() {

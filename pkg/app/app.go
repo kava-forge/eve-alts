@@ -8,12 +8,14 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+
 	"github.com/kava-forge/eve-alts/lib/errors"
 	"github.com/kava-forge/eve-alts/lib/http"
 	"github.com/kava-forge/eve-alts/lib/logging"
 	"github.com/kava-forge/eve-alts/lib/logging/level"
 
 	"github.com/kava-forge/eve-alts/migrations"
+	"github.com/kava-forge/eve-alts/pkg/app/colors"
 	"github.com/kava-forge/eve-alts/pkg/background"
 	"github.com/kava-forge/eve-alts/pkg/database"
 	"github.com/kava-forge/eve-alts/pkg/esi"
@@ -54,7 +56,7 @@ type SkillLevel struct {
 
 func New(appName string, deps dependencies, conf Config) (*App, error) {
 	a := app.NewWithID("org.evogames.eve-alts")
-	a.Settings().SetTheme(&AppTheme{})
+	a.Settings().SetTheme(&colors.AppTheme{})
 	w := NewMainWindow(deps, a)
 
 	return &App{

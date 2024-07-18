@@ -1,4 +1,4 @@
-package app
+package minitag
 
 import (
 	"image/color"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/kava-forge/eve-alts/lib/logging"
 	"github.com/kava-forge/eve-alts/lib/logging/level"
+	"github.com/kava-forge/eve-alts/pkg/app/colors"
 )
 
 type MiniTag struct {
@@ -16,21 +17,21 @@ type MiniTag struct {
 
 	logger       logging.Logger
 	NameLabel    *widget.RichText
-	ColorSwatch  *ColorSwatch
+	ColorSwatch  *colors.ColorSwatch
 	Dimmed       bool
 	UnDimmedBold bool
 
 	size fyne.ThemeSizeName
 }
 
-func NewMiniTag(logger logging.Logger, text string, c color.Color, size fyne.ThemeSizeName) *MiniTag {
+func New(logger logging.Logger, text string, c color.Color, size fyne.ThemeSizeName) *MiniTag {
 	cc := &MiniTag{
 		logger:      logger,
 		NameLabel:   widget.NewRichTextWithText(text),
-		ColorSwatch: NewColorSwatch(logger, c),
+		ColorSwatch: colors.NewColorSwatch(logger, c),
 		size:        size,
 	}
-	cc.refreshStyle()
+	cc.RefreshStyle()
 	cc.ColorSwatch.SetCornerRadius(theme.InnerPadding() / 2)
 	cc.ExtendBaseWidget(cc)
 
@@ -50,7 +51,7 @@ func (c *MiniTag) SetTextAt(idx int, text string) {
 	c.NameLabel.Refresh()
 }
 
-func (c *MiniTag) refreshStyle() {
+func (c *MiniTag) RefreshStyle() {
 	defer c.NameLabel.Refresh()
 
 	c.NameLabel.Wrapping = fyne.TextWrapOff
@@ -61,13 +62,13 @@ func (c *MiniTag) refreshStyle() {
 		var darkText, lightText fyne.ThemeColorName
 		if fyne.CurrentApp().Settings().ThemeVariant() == theme.VariantLight {
 			darkText = theme.ColorNameForeground
-			lightText = ColorNameInvertedForeground
+			lightText = colors.ColorNameInvertedForeground
 		} else {
 			lightText = theme.ColorNameForeground
-			darkText = ColorNameInvertedForeground
+			darkText = colors.ColorNameInvertedForeground
 		}
 
-		if UseDarkText(c.ColorSwatch.Color()) {
+		if colors.UseDarkText(c.ColorSwatch.Color()) {
 			textColorName = darkText
 		} else {
 			textColorName = lightText
@@ -101,7 +102,7 @@ func (c *MiniTag) Layout(sz fyne.Size) {
 	level.Debug(c.logger).Message("MiniTag.Layout", "size", sz, "text", c.NameLabel.String())
 
 	c.NameLabel.Refresh()
-	c.refreshStyle()
+	c.RefreshStyle()
 	c.NameLabel.Move(fyne.Position{X: -theme.InnerPadding() / 2, Y: -2 * theme.InnerPadding() / 3})
 
 	// half-size paddings

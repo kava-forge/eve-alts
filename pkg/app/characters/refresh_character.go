@@ -1,12 +1,13 @@
-package app
+package characters
 
 import (
 	"context"
 	"database/sql"
 
+	"golang.org/x/oauth2"
+
 	"github.com/kava-forge/eve-alts/lib/errors"
 	"github.com/kava-forge/eve-alts/lib/logging"
-	"golang.org/x/oauth2"
 
 	"github.com/kava-forge/eve-alts/pkg/database"
 	"github.com/kava-forge/eve-alts/pkg/esi"

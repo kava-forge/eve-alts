@@ -1,4 +1,4 @@
-package app
+package tags
 
 import (
 	"bufio"
@@ -16,16 +16,20 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"github.com/hashicorp/go-multierror"
+
 	"github.com/kava-forge/eve-alts/lib/errors"
 	"github.com/kava-forge/eve-alts/lib/logging"
 	"github.com/kava-forge/eve-alts/lib/logging/level"
 
+	"github.com/kava-forge/eve-alts/pkg/app/apperrors"
+	"github.com/kava-forge/eve-alts/pkg/app/bindings"
+	"github.com/kava-forge/eve-alts/pkg/app/colors"
 	"github.com/kava-forge/eve-alts/pkg/database"
 	"github.com/kava-forge/eve-alts/pkg/keys"
 	"github.com/kava-forge/eve-alts/pkg/repository"
 )
 
-func populateTagData(deps dependencies, nameInp *widget.Entry, colorSwatch *TappableColorSwatch, colorInp *dialog.ColorPickerDialog, textArea *widget.Entry, tagData DataProxy[*repository.TagDBData]) error {
+func populateTagData(deps dependencies, nameInp *widget.Entry, colorSwatch *colors.TappableColorSwatch, colorInp *dialog.ColorPickerDialog, textArea *widget.Entry, tagData bindings.DataProxy[*repository.TagDBData]) error {
 	tag, err := tagData.Get()
 	if err != nil {
 		return errors.Wrap(err, "unable to load tag data")
@@ -63,7 +67,7 @@ func populateTagData(deps dependencies, nameInp *widget.Entry, colorSwatch *Tapp
 	return nil
 }
 
-func NewTagEditor(deps dependencies, a fyne.App, title string, tags *DataList[*repository.TagDBData], tagData DataProxy[*repository.TagDBData], onClose func()) fyne.Window {
+func NewTagEditor(deps dependencies, a fyne.App, title string, tags *bindings.DataList[*repository.TagDBData], tagData bindings.DataProxy[*repository.TagDBData], onClose func()) fyne.Window {
 	logger := logging.With(deps.Logger(), keys.Component, "TagEditor")
 
 	w := a.NewWindow(fmt.Sprintf("EVE Alts - %s", title))
@@ -77,7 +81,7 @@ func NewTagEditor(deps dependencies, a fyne.App, title string, tags *DataList[*r
 
 	nameInp := widget.NewEntry()
 
-	colorSwatch := NewTappableColorSwatch(deps.Logger(), color.RGBA{R: uint8(rand.Intn(256)), G: uint8(rand.Intn(256)), B: uint8(rand.Intn(256)), A: 255}) //nolint:gosec // not security related
+	colorSwatch := colors.NewTappableColorSwatch(deps.Logger(), color.RGBA{R: uint8(rand.Intn(256)), G: uint8(rand.Intn(256)), B: uint8(rand.Intn(256)), A: 255}) //nolint:gosec // not security related
 	colorInp := dialog.NewColorPicker("Tag Color", "Pick a color for the tag", func(c color.Color) {
 		colorSwatch.SetColor(c)
 	}, w)
@@ -90,9 +94,9 @@ func NewTagEditor(deps dependencies, a fyne.App, title string, tags *DataList[*r
 
 	if tagData != nil {
 		if err := populateTagData(deps, nameInp, colorSwatch, colorInp, textArea, tagData); err != nil {
-			ShowError(logger, w, AppError(
+			apperrors.Show(logger, w, apperrors.Error(
 				"Could not load tag data",
-				WithCause(err),
+				apperrors.WithCause(err),
 			), nil)
 		}
 	}
@@ -108,9 +112,9 @@ func NewTagEditor(deps dependencies, a fyne.App, title string, tags *DataList[*r
 
 		skills, err := ParseSkills(ctx, deps.StaticRepo(), textArea.Text)
 		if err != nil {
-			ShowError(logger, w, AppError(
+			apperrors.Show(logger, w, apperrors.Error(
 				"Could not parse skill list",
-				WithCause(err),
+				apperrors.WithCause(err),
 			), nil)
 			return
 		}
@@ -141,9 +145,9 @@ func NewTagEditor(deps dependencies, a fyne.App, title string, tags *DataList[*r
 
 				return nil
 			}); err != nil {
-				ShowError(logger, w, AppError(
+				apperrors.Show(logger, w, apperrors.Error(
 					"Could not create tag",
-					WithCause(err),
+					apperrors.WithCause(err),
 				), nil)
 				return
 			}
@@ -152,18 +156,18 @@ func NewTagEditor(deps dependencies, a fyne.App, title string, tags *DataList[*r
 				Tag:    dbTag,
 				Skills: dbSkills,
 			}); err != nil {
-				ShowError(logger, w, AppError(
+				apperrors.Show(logger, w, apperrors.Error(
 					"Could not append tag",
-					WithCause(err),
+					apperrors.WithCause(err),
 				), nil)
 			}
 			w.Close()
 		} else { // edit existing
 			tagP, err := tagData.Get()
 			if err != nil {
-				ShowError(logger, w, AppError(
+				apperrors.Show(logger, w, apperrors.Error(
 					"Could not find tag data",
-					WithCause(err),
+					apperrors.WithCause(err),
 				), nil)
 				return
 			}
@@ -221,9 +225,9 @@ func NewTagEditor(deps dependencies, a fyne.App, title string, tags *DataList[*r
 
 				return nil
 			}); err != nil {
-				ShowError(logger, w, AppError(
+				apperrors.Show(logger, w, apperrors.Error(
 					"Could not save tag",
-					WithCause(err),
+					apperrors.WithCause(err),
 				), nil)
 				return
 			}
@@ -232,9 +236,9 @@ func NewTagEditor(deps dependencies, a fyne.App, title string, tags *DataList[*r
 				Tag:    dbTag,
 				Skills: dbSkills,
 			}); err != nil {
-				ShowError(logger, w, AppError(
+				apperrors.Show(logger, w, apperrors.Error(
 					"Could not set tag",
-					WithCause(err),
+					apperrors.WithCause(err),
 				), nil)
 			}
 			w.Close()

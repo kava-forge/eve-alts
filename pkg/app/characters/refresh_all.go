@@ -1,4 +1,4 @@
-package app
+package characters
 
 import (
 	"context"
@@ -7,15 +7,17 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/hashicorp/go-multierror"
+
 	"github.com/kava-forge/eve-alts/lib/errors"
 	"github.com/kava-forge/eve-alts/lib/logging"
-
+	"github.com/kava-forge/eve-alts/pkg/app/apperrors"
+	"github.com/kava-forge/eve-alts/pkg/app/bindings"
 	"github.com/kava-forge/eve-alts/pkg/esi"
 	"github.com/kava-forge/eve-alts/pkg/keys"
 	"github.com/kava-forge/eve-alts/pkg/repository"
 )
 
-func NewRefreshAllButton(deps dependencies, parent fyne.Window, chars *DataList[*repository.CharacterDBData]) *widget.Button {
+func NewRefreshAllButton(deps dependencies, parent fyne.Window, chars *bindings.DataList[*repository.CharacterDBData]) *widget.Button {
 	button := widget.NewButtonWithIcon("Refresh All Characters", theme.ViewRefreshIcon(), nil)
 	button.OnTapped = func() {
 		ctx := context.Background()
@@ -27,9 +29,9 @@ func NewRefreshAllButton(deps dependencies, parent fyne.Window, chars *DataList[
 
 		charList, err := chars.Get()
 		if err != nil {
-			ShowError(logger, parent, AppError(
+			apperrors.Show(logger, parent, apperrors.Error(
 				"Could not find character list data",
-				WithCause(err),
+				apperrors.WithCause(err),
 			), nil)
 			return
 		}
@@ -61,9 +63,9 @@ func NewRefreshAllButton(deps dependencies, parent fyne.Window, chars *DataList[
 		}
 
 		if errs != nil {
-			ShowError(logger, parent, AppError(
+			apperrors.Show(logger, parent, apperrors.Error(
 				"Could not refresh all characters",
-				WithCause(err),
+				apperrors.WithCause(err),
 			), nil)
 		}
 	}

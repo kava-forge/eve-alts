@@ -1,4 +1,4 @@
-package app
+package characters
 
 import (
 	"context"
@@ -13,9 +13,13 @@ import (
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+
 	"github.com/kava-forge/eve-alts/lib/logging"
 	"github.com/kava-forge/eve-alts/lib/logging/level"
 
+	"github.com/kava-forge/eve-alts/pkg/app/apperrors"
+	"github.com/kava-forge/eve-alts/pkg/app/bindings"
+	"github.com/kava-forge/eve-alts/pkg/app/minitag"
 	"github.com/kava-forge/eve-alts/pkg/esi"
 	"github.com/kava-forge/eve-alts/pkg/keys"
 	"github.com/kava-forge/eve-alts/pkg/repository"
@@ -33,8 +37,8 @@ type CharacterCard struct {
 	widget.BaseWidget
 
 	deps   dependencies
-	char   DataProxy[*repository.CharacterDBData]
-	tags   *DataList[*repository.TagDBData]
+	char   bindings.DataProxy[*repository.CharacterDBData]
+	tags   *bindings.DataList[*repository.TagDBData]
 	parent fyne.Window
 
 	NameLabel         *widget.Label
@@ -48,7 +52,7 @@ type CharacterCard struct {
 	RefreshButton     *widget.Button
 	DeleteButton      *widget.Button
 
-	MiniTags          *MiniTagSet[string, *CharacterMiniTag]
+	MiniTags          *minitag.MiniTagSet[string, *CharacterMiniTag]
 	MiniTagsContainer *container.Scroll
 	miniTagLookup     map[int64]bool
 	selectedTags      map[string]bool
@@ -96,14 +100,14 @@ func getImagesForChar(logger logging.Logger, char *repository.CharacterDBData) (
 	return im
 }
 
-func NewCharacterCard(deps dependencies, parent fyne.Window, dataChar DataProxy[*repository.CharacterDBData], tags *DataList[*repository.TagDBData], deleteFunc func(c *CharacterCard)) *CharacterCard {
+func NewCharacterCard(deps dependencies, parent fyne.Window, dataChar bindings.DataProxy[*repository.CharacterDBData], tags *bindings.DataList[*repository.TagDBData], deleteFunc func(c *CharacterCard)) *CharacterCard {
 	logger := logging.With(deps.Logger(), keys.Component, "CharacterCard.NewCharacterCard")
 
 	char, err := dataChar.Get()
 	if err != nil || char == nil {
-		ShowError(logger, parent, AppError(
+		apperrors.Show(logger, parent, apperrors.Error(
 			"Could not find character data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return nil
 	}
@@ -135,7 +139,7 @@ func NewCharacterCard(deps dependencies, parent fyne.Window, dataChar DataProxy[
 		RefreshButton: widget.NewButton("refresh", nil),
 		DeleteButton:  widget.NewButton("delete", nil),
 
-		MiniTags:      NewMiniTagSet[string, *CharacterMiniTag](),
+		MiniTags:      minitag.NewMiniTagSet[string, *CharacterMiniTag](),
 		miniTagLookup: map[int64]bool{},
 		selectedTags:  map[string]bool{},
 	}
@@ -164,6 +168,10 @@ func NewCharacterCard(deps dependencies, parent fyne.Window, dataChar DataProxy[
 	return cc
 }
 
+func (c *CharacterCard) Parent() fyne.Window {
+	return c.parent
+}
+
 // func (c *CharacterCard) Tapped(_ *fyne.PointEvent) {}
 
 func (c *CharacterCard) CreateRenderer() fyne.WidgetRenderer {
@@ -174,12 +182,12 @@ func (c *CharacterCard) matchesSelectedTags() bool {
 	logger := logging.With(c.deps.Logger(), keys.Component, "CharacterCard.matchesSelectedTags")
 
 	matchedTags := make(map[string]bool, c.MiniTags.Len())
-	for _, mt := range c.MiniTags.items {
+	for _, mt := range c.MiniTags.Items() {
 		tag, err := mt.tag.Get()
 		if err != nil {
-			ShowError(logger, c.parent, AppError(
+			apperrors.Show(logger, c.parent, apperrors.Error(
 				"Could not load tag data",
-				WithCause(err),
+				apperrors.WithCause(err),
 			), nil)
 		}
 		matchedTags[tag.StrID()] = mt.isMatch
@@ -205,9 +213,9 @@ func (c *CharacterCard) redraw() {
 
 	char, err := c.char.Get()
 	if err != nil || char == nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find character data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -249,9 +257,9 @@ func (c *CharacterCard) refreshTags() {
 
 	char, err := c.char.Get()
 	if err != nil || char == nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find character data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -260,10 +268,10 @@ func (c *CharacterCard) refreshTags() {
 
 	tags, err := c.tags.Get()
 	if err != nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find tags data",
-			WithCause(err),
-			WithInternalData(keys.CharacterID),
+			apperrors.WithCause(err),
+			apperrors.WithInternalData(keys.CharacterID),
 		), nil)
 		return
 	}
@@ -287,9 +295,9 @@ func (c *CharacterCard) CharacterID() int64 {
 
 	char, err := c.char.Get()
 	if err != nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find character data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return 0
 	}
@@ -310,9 +318,9 @@ func (c *CharacterCard) refreshData() {
 
 	char, err := c.char.Get()
 	if err != nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find character data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -321,9 +329,9 @@ func (c *CharacterCard) refreshData() {
 
 	dbTok, err := c.deps.AppRepo().GetTokenForCharacter(ctx, char.Character.ID, nil)
 	if err != nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not find character token",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -332,17 +340,17 @@ func (c *CharacterCard) refreshData() {
 
 	newChar, err := RefreshCharacterData(ctx, c.deps, tok, char.Character.ID)
 	if err != nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Error refreshing character data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
 
 	if err := c.char.Set(&newChar); err != nil {
-		ShowError(logger, c.parent, AppError(
+		apperrors.Show(logger, c.parent, apperrors.Error(
 			"Could not set character data",
-			WithCause(err),
+			apperrors.WithCause(err),
 		), nil)
 		return
 	}
@@ -359,9 +367,9 @@ func (c *CharacterCard) deleteCharacter(callback func(*CharacterCard)) func() {
 
 		char, err := c.char.Get()
 		if err != nil {
-			ShowError(logger, c.parent, AppError(
+			apperrors.Show(logger, c.parent, apperrors.Error(
 				"Could not find character data",
-				WithCause(err),
+				apperrors.WithCause(err),
 			), nil)
 			return
 		}
@@ -374,9 +382,9 @@ func (c *CharacterCard) deleteCharacter(callback func(*CharacterCard)) func() {
 			}
 
 			if err := c.deps.AppRepo().DeleteCharacter(ctx, c.CharacterID(), nil); err != nil {
-				ShowError(logger, c.parent, AppError(
+				apperrors.Show(logger, c.parent, apperrors.Error(
 					"Unable to delete character",
-					WithCause(err),
+					apperrors.WithCause(err),
 				), nil)
 			} else {
 				callback(c)
