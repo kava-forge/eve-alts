@@ -1,4 +1,4 @@
-package tags
+package roles
 
 import (
 	"context"
@@ -20,11 +20,11 @@ import (
 	"github.com/kava-forge/eve-alts/pkg/repository"
 )
 
-type TagCard struct {
+type RoleCard struct {
 	widget.BaseWidget
 
 	deps   dependencies
-	tag    bindings.DataProxy[*repository.TagDBData]
+	role   bindings.DataProxy[*repository.RoleDBData]
 	parent fyne.Window
 
 	NameLabel    *widget.RichText
@@ -33,13 +33,13 @@ type TagCard struct {
 	DeleteButton *widget.Button
 }
 
-func NewTagCard(deps dependencies, parent fyne.Window, dataTag bindings.DataProxy[*repository.TagDBData], deleteFunc func(c *TagCard), editFunc func(bindings.DataProxy[*repository.TagDBData], func())) *TagCard {
-	logger := logging.With(deps.Logger(), keys.Component, "TagCard")
+func NewRoleCard(deps dependencies, parent fyne.Window, dataRole bindings.DataProxy[*repository.RoleDBData], deleteFunc func(c *RoleCard), editFunc func(bindings.DataProxy[*repository.RoleDBData], func())) *RoleCard {
+	logger := logging.With(deps.Logger(), keys.Component, "RoleCard")
 
-	tag, err := dataTag.Get()
+	role, err := dataRole.Get()
 	if err != nil {
 		apperrors.Show(logger, parent, apperrors.Error(
-			"Could not find tag data",
+			"Could not find role data",
 			apperrors.WithCause(err),
 		), nil)
 		return nil
@@ -47,13 +47,13 @@ func NewTagCard(deps dependencies, parent fyne.Window, dataTag bindings.DataProx
 
 	// logger = logging.With(logger, keys.TagID, tag.Tag.ID, keys.TagName, tag.Tag.Name)
 
-	cc := &TagCard{
+	cc := &RoleCard{
 		deps:   deps,
-		tag:    dataTag,
+		role:   dataRole,
 		parent: parent,
 
-		NameLabel:   widget.NewRichTextWithText(tag.Tag.Name),
-		ColorSwatch: colors.NewColorSwatch(deps.Logger(), tag.Color()),
+		NameLabel:   widget.NewRichTextWithText(role.Role.Name),
+		ColorSwatch: colors.NewColorSwatch(deps.Logger(), role.Color()),
 		// EditButton:   widget.NewButtonWithIcon("edit", theme.SettingsIcon(), nil),
 		// DeleteButton: widget.NewButtonWithIcon("delete", theme.DeleteIcon(), nil),
 		EditButton:   widget.NewButton("edit", nil),
@@ -64,20 +64,20 @@ func NewTagCard(deps dependencies, parent fyne.Window, dataTag bindings.DataProx
 	cc.RefreshStyle()
 	cc.ColorSwatch.SetCornerRadius(theme.InnerPadding() / 2)
 
-	cc.EditButton.OnTapped = cc.editTag(editFunc)
-	cc.DeleteButton.OnTapped = cc.deleteTag(deleteFunc)
+	cc.EditButton.OnTapped = cc.editRole(editFunc)
+	cc.DeleteButton.OnTapped = cc.deleteRole(deleteFunc)
 	cc.DeleteButton.Importance = widget.DangerImportance
 
-	dataTag.AddListener(binding.NewDataListener(cc.redraw))
+	dataRole.AddListener(binding.NewDataListener(cc.redraw))
 
 	return cc
 }
 
-func (c *TagCard) Parent() fyne.Window {
+func (c *RoleCard) Parent() fyne.Window {
 	return c.parent
 }
 
-func (c *TagCard) RefreshStyle() {
+func (c *RoleCard) RefreshStyle() {
 	defer c.NameLabel.Refresh()
 
 	c.NameLabel.Wrapping = fyne.TextWrapOff
@@ -113,97 +113,97 @@ func (c *TagCard) RefreshStyle() {
 	}
 }
 
-func (c *TagCard) CreateRenderer() fyne.WidgetRenderer {
+func (c *RoleCard) CreateRenderer() fyne.WidgetRenderer {
 	return c
 }
 
-func (c *TagCard) SetText(text string) {
+func (c *RoleCard) SetText(text string) {
 	c.SetTextAt(0, text)
 }
 
-func (c *TagCard) SetTextAt(idx int, text string) {
+func (c *RoleCard) SetTextAt(idx int, text string) {
 	c.NameLabel.Segments[idx].(*widget.TextSegment).Text = text
 	c.NameLabel.Refresh()
 }
 
-func (c *TagCard) redraw() {
+func (c *RoleCard) redraw() {
 	defer c.Refresh()
 
-	logger := logging.With(c.deps.Logger(), keys.Component, "TagCard.redraw")
+	logger := logging.With(c.deps.Logger(), keys.Component, "RoleCard.redraw")
 
-	tag, err := c.tag.Get()
-	if err != nil || tag == nil {
+	role, err := c.role.Get()
+	if err != nil || role == nil {
 		apperrors.Show(logger, c.parent, apperrors.Error(
-			"Could not find tag data",
+			"Could not find role data",
 			apperrors.WithCause(err),
 		), nil)
 		return
 	}
 
-	logger = logging.With(logger, keys.TagID, tag.Tag.ID, keys.TagName, tag.Tag.Name)
+	logger = logging.With(logger, keys.RoleID, role.Role.ID, keys.RoleName, role.Role.Name)
 
-	level.Debug(logger).Message("refreshing tag card", "color", fmt.Sprintf("%#v", tag.Color()))
+	level.Debug(logger).Message("refreshing role card", "color", fmt.Sprintf("%#v", role.Color()))
 
-	c.SetText(tag.Tag.Name)
-	c.ColorSwatch.SetColor(tag.Color())
+	c.SetText(role.Role.Name)
+	c.ColorSwatch.SetColor(role.Color())
 	c.RefreshStyle()
 }
 
-func (c *TagCard) TagID() int64 {
-	logger := logging.With(c.deps.Logger(), keys.Component, "TagCard.TagID")
+func (c *RoleCard) RoleID() int64 {
+	logger := logging.With(c.deps.Logger(), keys.Component, "RoleCard.RoleID")
 
-	tag, err := c.tag.Get()
+	role, err := c.role.Get()
 	if err != nil {
 		apperrors.Show(logger, c.parent, apperrors.Error(
-			"Could not find tag data",
+			"Could not find role data",
 			apperrors.WithCause(err),
 		), nil)
 		return 0
 	}
-	return tag.Tag.ID
+	return role.Role.ID
 }
 
-func (c *TagCard) RefreshDataWith(tag *repository.TagDBData) error {
-	return c.tag.Set(tag)
+func (c *RoleCard) RefreshDataWith(role *repository.RoleDBData) error {
+	return c.role.Set(role)
 }
 
-func (c *TagCard) editTag(editFunc func(bindings.DataProxy[*repository.TagDBData], func())) func() {
+func (c *RoleCard) editRole(editFunc func(bindings.DataProxy[*repository.RoleDBData], func())) func() {
 	return func() {
 		c.EditButton.Disable()
 
-		editFunc(c.tag, func() {
+		editFunc(c.role, func() {
 			c.EditButton.Enable()
 		})
 	}
 }
 
-func (c *TagCard) deleteTag(callback func(*TagCard)) func() {
-	logger := logging.With(c.deps.Logger(), keys.Component, "TagCard.deleteTag")
+func (c *RoleCard) deleteRole(callback func(*RoleCard)) func() {
+	logger := logging.With(c.deps.Logger(), keys.Component, "RoleCard.deleteRole")
 	return func() {
 		ctx := context.Background()
 
 		c.DeleteButton.Disable()
 
-		tag, err := c.tag.Get()
+		role, err := c.role.Get()
 		if err != nil {
 			apperrors.Show(logger, c.parent, apperrors.Error(
-				"Could not find tag data",
+				"Could not find role data",
 				apperrors.WithCause(err),
 			), nil)
 			return
 		}
 
-		logger := logging.With(logger, keys.TagID, tag.Tag.ID, keys.TagName, tag.Tag.Name) //nolint:govet // intentional
+		logger := logging.With(logger, keys.RoleID, role.Role.ID, keys.RoleName, role.Role.Name) //nolint:govet // intentional
 
-		conf := dialog.NewConfirm("Delete Tag?", fmt.Sprintf("Are you sure you want to delete the tag '%s'?", tag.Tag.Name), func(ok bool) {
+		conf := dialog.NewConfirm("Delete Role?", fmt.Sprintf("Are you sure you want to delete the role '%s'?", role.Role.Name), func(ok bool) {
 			defer c.DeleteButton.Enable()
 			if !ok {
 				return
 			}
 
-			if err := c.deps.AppRepo().DeleteTag(ctx, c.TagID(), nil); err != nil {
+			if err := c.deps.AppRepo().DeleteRole(ctx, c.RoleID(), nil); err != nil {
 				apperrors.Show(logger, c.parent, apperrors.Error(
-					"Could not delete tag",
+					"Could not delete role",
 					apperrors.WithCause(err),
 				), nil)
 			} else {
@@ -217,9 +217,9 @@ func (c *TagCard) deleteTag(callback func(*TagCard)) func() {
 
 // The WidgetRenderer interface
 
-func (c *TagCard) Destroy() {}
+func (c *RoleCard) Destroy() {}
 
-func (c *TagCard) Layout(sz fyne.Size) {
+func (c *RoleCard) Layout(sz fyne.Size) {
 	fontSize := fyne.CurrentApp().Settings().Theme().Size(theme.SizeNameText)
 
 	c.ColorSwatch.Move(fyne.Position{X: 0, Y: 0})
@@ -241,14 +241,14 @@ func (c *TagCard) Layout(sz fyne.Size) {
 	c.DeleteButton.Move(fyne.Position{X: sz.Width - rbsz.Width - theme.Padding() - dbsz.Width - theme.Padding(), Y: sz.Height - dbsz.Height - theme.Padding()})
 }
 
-func (c *TagCard) MinSize() fyne.Size {
+func (c *RoleCard) MinSize() fyne.Size {
 	return fyne.Size{
 		Height: 50,
 		Width:  100,
 	}
 }
 
-func (c *TagCard) Objects() []fyne.CanvasObject {
+func (c *RoleCard) Objects() []fyne.CanvasObject {
 	return []fyne.CanvasObject{
 		c.ColorSwatch,
 		c.NameLabel,
@@ -257,7 +257,7 @@ func (c *TagCard) Objects() []fyne.CanvasObject {
 	}
 }
 
-func (c *TagCard) Refresh() {
+func (c *RoleCard) Refresh() {
 	for _, o := range c.Objects() {
 		o.Refresh()
 	}

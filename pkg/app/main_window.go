@@ -12,6 +12,7 @@ import (
 	"github.com/kava-forge/eve-alts/lib/logging/level"
 	"github.com/kava-forge/eve-alts/pkg/app/apperrors"
 	"github.com/kava-forge/eve-alts/pkg/app/characters"
+	"github.com/kava-forge/eve-alts/pkg/app/roles"
 	"github.com/kava-forge/eve-alts/pkg/app/tags"
 	"github.com/kava-forge/eve-alts/pkg/database"
 	"github.com/kava-forge/eve-alts/pkg/keys"
@@ -25,11 +26,13 @@ func NewMainWindow(deps dependencies, a fyne.App) fyne.Window {
 	w.Resize(fyne.Size{Width: 1024, Height: 768})
 
 	tagsTab, tags := tags.NewTagsTab(deps, w)
-	charsTab, chars := characters.NewCharactersTab(deps, w, tags)
+	rolesTab, roles := roles.NewRolesTab(deps, w, tags)
+	charsTab, chars := characters.NewCharactersTab(deps, w, tags, roles)
 
 	tabs := container.NewAppTabs(
 		container.NewTabItemWithIcon("Characters", theme.AccountIcon(), charsTab),
 		container.NewTabItemWithIcon("Tags", theme.ListIcon(), tagsTab),
+		container.NewTabItemWithIcon("Roles", theme.GridIcon(), rolesTab),
 	)
 
 	w.SetContent(tabs)
@@ -63,6 +66,22 @@ func NewMainWindow(deps dependencies, a fyne.App) fyne.Window {
 			if err := tags.Set(knownTags); err != nil {
 				apperrors.Show(logger, w, apperrors.Error(
 					"Could not set tags list data",
+					apperrors.WithCause(err),
+				), nil)
+			}
+		}
+
+		knownRoles, err := deps.AppRepo().GetAllRoles(ctx, nil)
+		if err != nil && !errors.Is(err, database.ErrNoRows) {
+			apperrors.Show(logger, w, apperrors.Error(
+				"Could not load roles data",
+				apperrors.WithCause(err),
+			), nil)
+		} else {
+			level.Debug(logger).Message("initial roles loaded")
+			if err := roles.Set(knownRoles); err != nil {
+				apperrors.Show(logger, w, apperrors.Error(
+					"Could not set roles list data",
 					apperrors.WithCause(err),
 				), nil)
 			}

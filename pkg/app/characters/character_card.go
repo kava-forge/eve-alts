@@ -39,6 +39,7 @@ type CharacterCard struct {
 	deps   dependencies
 	char   bindings.DataProxy[*repository.CharacterDBData]
 	tags   *bindings.DataList[*repository.TagDBData]
+	roles  *bindings.DataList[*repository.RoleDBData]
 	parent fyne.Window
 
 	NameLabel         *widget.Label
@@ -56,6 +57,10 @@ type CharacterCard struct {
 	MiniTagsContainer *container.Scroll
 	miniTagLookup     map[int64]bool
 	selectedTags      map[string]bool
+
+	Roles         *minitag.MiniTagSet[string, *RoleMiniTag]
+	roleLookup    map[int64]bool
+	selectedRoles map[string]bool
 }
 
 type images struct {
@@ -100,7 +105,7 @@ func getImagesForChar(logger logging.Logger, char *repository.CharacterDBData) (
 	return im
 }
 
-func NewCharacterCard(deps dependencies, parent fyne.Window, dataChar bindings.DataProxy[*repository.CharacterDBData], tags *bindings.DataList[*repository.TagDBData], deleteFunc func(c *CharacterCard)) *CharacterCard {
+func NewCharacterCard(deps dependencies, parent fyne.Window, dataChar bindings.DataProxy[*repository.CharacterDBData], tagsData *bindings.DataList[*repository.TagDBData], rolesData *bindings.DataList[*repository.RoleDBData], deleteFunc func(c *CharacterCard)) *CharacterCard {
 	logger := logging.With(deps.Logger(), keys.Component, "CharacterCard.NewCharacterCard")
 
 	char, err := dataChar.Get()
@@ -123,7 +128,8 @@ func NewCharacterCard(deps dependencies, parent fyne.Window, dataChar bindings.D
 	cc := &CharacterCard{
 		deps:   deps,
 		char:   dataChar,
-		tags:   tags,
+		tags:   tagsData,
+		roles:  rolesData,
 		parent: parent,
 
 		NameLabel:         widget.NewLabel(char.Character.Name),
@@ -142,6 +148,10 @@ func NewCharacterCard(deps dependencies, parent fyne.Window, dataChar bindings.D
 		MiniTags:      minitag.NewMiniTagSet[string, *CharacterMiniTag](),
 		miniTagLookup: map[int64]bool{},
 		selectedTags:  map[string]bool{},
+
+		Roles:         minitag.NewMiniTagSet[string, *RoleMiniTag](),
+		roleLookup:    map[int64]bool{},
+		selectedRoles: map[string]bool{},
 	}
 	cc.ExtendBaseWidget(cc)
 
@@ -161,9 +171,11 @@ func NewCharacterCard(deps dependencies, parent fyne.Window, dataChar bindings.D
 	cc.DeleteButton.Importance = widget.DangerImportance
 
 	cc.refreshTags()
+	cc.refreshRoles()
 
 	dataChar.AddListener(binding.NewDataListener(cc.redraw))
-	tags.AddListener(binding.NewDataListener(cc.refreshTags))
+	tagsData.AddListener(binding.NewDataListener(cc.refreshTags))
+	rolesData.AddListener(binding.NewDataListener(cc.refreshRoles))
 
 	return cc
 }
@@ -206,6 +218,34 @@ func (c *CharacterCard) matchesSelectedTags() bool {
 	return true
 }
 
+func (c *CharacterCard) matchesSelectedRoles() bool {
+	logger := logging.With(c.deps.Logger(), keys.Component, "CharacterCard.matchesSelectedRoles")
+
+	matchedRoles := make(map[string]bool, c.Roles.Len())
+	for _, mt := range c.Roles.Items() {
+		role, err := mt.role.Get()
+		if err != nil {
+			apperrors.Show(logger, c.parent, apperrors.Error(
+				"Could not load role data",
+				apperrors.WithCause(err),
+			), nil)
+		}
+		matchedRoles[role.StrID()] = mt.isMatch
+	}
+
+	for k, on := range c.selectedRoles {
+		if !on {
+			continue
+		}
+
+		if !matchedRoles[k] {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (c *CharacterCard) redraw() {
 	defer c.Refresh()
 
@@ -224,7 +264,7 @@ func (c *CharacterCard) redraw() {
 
 	level.Debug(logger).Message("refreshing character card")
 
-	if c.matchesSelectedTags() {
+	if c.matchesSelectedTags() && c.matchesSelectedRoles() {
 		if c.Hidden {
 			c.Show()
 		}
@@ -288,6 +328,46 @@ func (c *CharacterCard) refreshTags() {
 		mt.Refresh()
 	}
 	c.MiniTags.Refresh()
+}
+
+func (c *CharacterCard) refreshRoles() {
+	defer c.Refresh()
+
+	logger := logging.With(c.deps.Logger(), keys.Component, "CharacterCard.refreshRoles")
+
+	char, err := c.char.Get()
+	if err != nil || char == nil {
+		apperrors.Show(logger, c.parent, apperrors.Error(
+			"Could not find character data",
+			apperrors.WithCause(err),
+		), nil)
+		return
+	}
+
+	logger = logging.With(logger, keys.CharacterID, char.Character.ID, keys.CharacterName, char.Character.Name)
+
+	roles, err := c.roles.Get()
+	if err != nil {
+		apperrors.Show(logger, c.parent, apperrors.Error(
+			"Could not find roles data",
+			apperrors.WithCause(err),
+			apperrors.WithInternalData(keys.CharacterID),
+		), nil)
+		return
+	}
+
+	for i, role := range roles {
+		_, ok := c.roleLookup[role.Role.ID]
+		if ok { // old -- refresh triggered elsewise
+			continue
+		}
+
+		c.roleLookup[role.Role.ID] = true
+		mt := NewRoleMiniTag(c.deps, c.parent, c.char, c.roles.Child(i), c.tags)
+		c.Roles.Add(mt)
+		mt.Refresh()
+	}
+	c.Roles.Refresh()
 }
 
 func (c *CharacterCard) CharacterID() int64 {
@@ -440,6 +520,10 @@ func (c *CharacterCard) Layout(sz fyne.Size) {
 	c.MiniTagsContainer.Resize(fyne.Size{Width: sz.Width - x, Height: sz.Height - y - 32 - theme.Padding()/2})
 	c.MiniTags.Resize(fyne.Size{Width: sz.Width - x, Height: sz.Height - y - 32 - theme.Padding()/2})
 
+	// Roles
+	c.Roles.Resize(fyne.Size{Height: 128 - 2*theme.Padding(), Width: 128 - 2*theme.Padding()})
+	c.Roles.Move(fyne.Position{X: theme.Padding(), Y: theme.Padding()})
+
 	// Buttons
 	refreshLabelSz := fyne.MeasureText(c.RefreshButton.Text, fontSize, c.NameLabel.TextStyle)
 	c.RefreshButton.Resize(fyne.Size{Width: refreshLabelSz.Width + 2*theme.InnerPadding(), Height: refreshLabelSz.Height + theme.InnerPadding()})
@@ -474,6 +558,7 @@ func (c *CharacterCard) Objects() []fyne.CanvasObject {
 		c.RefreshButton,
 		c.DeleteButton,
 		c.MiniTagsContainer,
+		c.Roles,
 	}
 
 	return objs

@@ -64,7 +64,7 @@ func NewTagsTab(deps dependencies, parent fyne.Window) (fyne.CanvasObject, *bind
 			if idx := tagsShown[tag.Tag.ID]; idx != 0 {
 				level.Debug(logger).Message("refreshing tag", keys.TagID, tag.Tag.ID, "index", idx)
 				delete(toDelete, tag.Tag.ID)
-				if err := ctn.Objects[idx].(*TagCard).RefreshDataWith(*tag); err != nil {
+				if err := ctn.Objects[idx].(*TagCard).RefreshDataWith(tag); err != nil {
 					apperrors.Show(logger, parent, apperrors.Error(
 						"Could not set tags data",
 						apperrors.WithCause(err),

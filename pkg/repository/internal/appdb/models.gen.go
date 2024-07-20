@@ -37,6 +37,22 @@ type Corporation struct {
 	Picture    string
 }
 
+type Role struct {
+	ID       int64
+	Name     string
+	Label    string
+	Operator string
+	ColorR   int64
+	ColorG   int64
+	ColorB   int64
+	ColorA   int64
+}
+
+type RoleTag struct {
+	RoleID int64
+	TagID  int64
+}
+
 type Tag struct {
 	ID     int64
 	Name   string
@@ -44,7 +60,6 @@ type Tag struct {
 	ColorG int64
 	ColorB int64
 	ColorA int64
-	IF     interface{}
 }
 
 type TagSkill struct {

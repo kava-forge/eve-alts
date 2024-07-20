@@ -24,6 +24,11 @@ const (
 	SkillID            = "evealts.skill_id"
 	SkillName          = "evealts.skill_name"
 	SkillLevel         = "evealts.skill_level"
+	RoleID             = "evealts.role_id"
+	RoleName           = "evealts.role_name"
+	RoleLabel          = "evealts.role_label"
+	RoleOperator       = "evealts.role_operator"
+	Color              = "evealts.color"
 
 	HostPort  = "evealts.host_port"
 	ElapsedNS = "elapsed_ns"

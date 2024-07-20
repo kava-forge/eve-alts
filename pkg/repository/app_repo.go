@@ -13,6 +13,7 @@ import (
 
 	"github.com/kava-forge/eve-alts/pkg/database"
 	"github.com/kava-forge/eve-alts/pkg/keys"
+	"github.com/kava-forge/eve-alts/pkg/operators"
 	"github.com/kava-forge/eve-alts/pkg/repository/internal/appdb"
 	"github.com/kava-forge/eve-alts/pkg/telemetry"
 )
@@ -25,6 +26,8 @@ type (
 	CharacterSkill = appdb.CharacterSkill
 	Tag            = appdb.Tag
 	TagSkill       = appdb.TagSkill
+	Role           = appdb.Role
+	RoleTag        = appdb.RoleTag
 )
 
 type CharacterDBData struct {
@@ -52,6 +55,25 @@ func (t TagDBData) StrID() string {
 	return strconv.FormatInt(t.Tag.ID, 10)
 }
 
+type RoleDBData struct {
+	Role     Role
+	Operator operators.Operator
+	Tags     []Tag
+}
+
+func (t RoleDBData) Color() color.Color {
+	return color.RGBA{
+		R: uint8(t.Role.ColorR),
+		G: uint8(t.Role.ColorG),
+		B: uint8(t.Role.ColorB),
+		A: uint8(t.Role.ColorA),
+	}
+}
+
+func (t RoleDBData) StrID() string {
+	return strconv.FormatInt(t.Role.ID, 10)
+}
+
 //counterfeiter:generate . AppData
 type AppData interface {
 	UpsertCharacter(ctx context.Context, charID int64, name, picture string, corporationID int64, tx database.Tx) (Character, error)
@@ -64,6 +86,7 @@ type AppData interface {
 	UpsertCharacterSkill(ctx context.Context, charID, skillID, trainedLevel int64, tx database.Tx) (CharacterSkill, error)
 	DeleteCharacterSkills(ctx context.Context, charID int64, skillIDs []int64, tx database.Tx) error
 	DeleteCharacter(ctx context.Context, charID int64, tx database.Tx) error
+
 	InsertTag(ctx context.Context, name string, c color.Color, tx database.Tx) (Tag, error)
 	UpdateTag(ctx context.Context, tagID int64, name string, c color.Color, tx database.Tx) error
 	DeleteTag(ctx context.Context, tagID int64, tx database.Tx) error
@@ -71,6 +94,14 @@ type AppData interface {
 	GetAllTagSkills(ctx context.Context, tagID int64, tx database.Tx) ([]TagSkill, error)
 	UpsertTagSkill(ctx context.Context, tagID, skillID, skillLevel int64, tx database.Tx) (TagSkill, error)
 	DeleteTagSkills(ctx context.Context, tagID int64, skillIDs []int64, tx database.Tx) error
+
+	InsertRole(ctx context.Context, name, label string, operator operators.Operator, c color.Color, tx database.Tx) (Role, error)
+	UpdateRole(ctx context.Context, roleID int64, name, label string, operator operators.Operator, c color.Color, tx database.Tx) error
+	DeleteRole(ctx context.Context, roleID int64, tx database.Tx) error
+	GetAllRoles(ctx context.Context, tx database.Tx) ([]*RoleDBData, error)
+	GetAllRoleTags(ctx context.Context, roleID int64, tx database.Tx) ([]Tag, error)
+	UpsertRoleTag(ctx context.Context, roleID, tagID int64, tx database.Tx) (RoleTag, error)
+	DeleteRoleTags(ctx context.Context, roleID int64, tagIDs []int64, tx database.Tx) error
 }
 
 type appDependencies interface {
@@ -492,6 +523,177 @@ func (r *AppSqliteRepository) DeleteTagSkills(ctx context.Context, tagID int64, 
 			SkillIds: skillIDs,
 		})
 		return errors.Wrap(err, "could not DeleteTagSkills")
+	}
+
+	if tx == nil {
+		err = errors.Wrap(database.TransactWithRetries(ctx, r.deps.Telemetry(), r.deps.Logger(), r.deps.DB(), &sql.TxOptions{}, inner), "could not TransactWithRetries")
+	} else {
+		err = inner(ctx, tx)
+	}
+	return err
+}
+
+func (r *AppSqliteRepository) InsertRole(ctx context.Context, name, label string, operator operators.Operator, c color.Color, tx database.Tx) (role Role, err error) {
+	ctx, span := telemetry.StartSpan(ctx, r.deps.Telemetry(), "repository.app", "InsertRole")
+	defer telemetry.EndSpan(span, &err)
+
+	logger := r.deps.Logger()
+	level.Debug(logger).Message("calling InsertRole", keys.RoleName, name, keys.RoleLabel, label, keys.RoleOperator, operator, keys.Color, c)
+
+	cr, cg, cb, ca := c.RGBA()
+
+	inner := func(ctx context.Context, tx database.Tx) error {
+		role, err = r.queries.InsertRole(ctx, tx, appdb.InsertRoleParams{
+			Name:     name,
+			Label:    label,
+			Operator: operator.String(),
+			ColorR:   int64(cr),
+			ColorG:   int64(cg),
+			ColorB:   int64(cb),
+			ColorA:   int64(ca),
+		})
+		return errors.Wrap(err, "could not InsertRole")
+	}
+
+	if tx == nil {
+		err = errors.Wrap(database.TransactWithRetries(ctx, r.deps.Telemetry(), r.deps.Logger(), r.deps.DB(), &sql.TxOptions{}, inner), "could not TransactWithRetries")
+	} else {
+		err = inner(ctx, tx)
+	}
+	return role, err
+}
+
+func (r *AppSqliteRepository) UpdateRole(ctx context.Context, roleID int64, name, label string, operator operators.Operator, c color.Color, tx database.Tx) (err error) {
+	ctx, span := telemetry.StartSpan(ctx, r.deps.Telemetry(), "repository.app", "UpdateRole")
+	defer telemetry.EndSpan(span, &err)
+
+	logger := r.deps.Logger()
+	level.Debug(logger).Message("calling UpdateRole", keys.RoleID, roleID, keys.RoleName, name, keys.RoleLabel, label, keys.RoleOperator, operator, keys.Color, c)
+
+	cr, cg, cb, ca := c.RGBA()
+
+	inner := func(ctx context.Context, tx database.Tx) error {
+		err = r.queries.UpdateRole(ctx, tx, appdb.UpdateRoleParams{
+			ID:       roleID,
+			Name:     name,
+			Label:    label,
+			Operator: operator.String(),
+			ColorR:   int64(cr),
+			ColorG:   int64(cg),
+			ColorB:   int64(cb),
+			ColorA:   int64(ca),
+		})
+		return errors.Wrap(err, "could not UpdateRole")
+	}
+
+	if tx == nil {
+		err = errors.Wrap(database.TransactWithRetries(ctx, r.deps.Telemetry(), r.deps.Logger(), r.deps.DB(), &sql.TxOptions{}, inner), "could not TransactWithRetries")
+	} else {
+		err = inner(ctx, tx)
+	}
+	return err
+}
+
+func (r *AppSqliteRepository) DeleteRole(ctx context.Context, roleID int64, tx database.Tx) (err error) {
+	ctx, span := telemetry.StartSpan(ctx, r.deps.Telemetry(), "repository.app", "DeleteRole")
+	defer telemetry.EndSpan(span, &err)
+
+	logger := r.deps.Logger()
+	level.Debug(logger).Message("calling DeleteRole", keys.RoleID, roleID)
+
+	inner := func(ctx context.Context, tx database.Tx) error {
+		err = r.queries.DeleteRole(ctx, tx, roleID)
+		return errors.Wrap(err, "could not DeleteRole")
+	}
+
+	if tx == nil {
+		err = errors.Wrap(database.TransactWithRetries(ctx, r.deps.Telemetry(), r.deps.Logger(), r.deps.DB(), &sql.TxOptions{}, inner), "could not TransactWithRetries")
+	} else {
+		err = inner(ctx, tx)
+	}
+	return err
+}
+
+func (r *AppSqliteRepository) GetAllRoles(ctx context.Context, tx database.Tx) (_ []*RoleDBData, err error) {
+	ctx, span := telemetry.StartSpan(ctx, r.deps.Telemetry(), "repository.app", "GetAllRoles")
+	defer telemetry.EndSpan(span, &err)
+
+	logger := r.deps.Logger()
+	level.Debug(logger).Message("calling GetAllRoles")
+
+	roles, err := r.queries.GetAllRoles(ctx, r.db(tx))
+	if err != nil {
+		return nil, errors.Wrap(err, "could not GetAllRoles")
+	}
+
+	roleDBData := make([]*RoleDBData, 0, len(roles))
+	for _, ro := range roles {
+		tags, err := r.GetAllRoleTags(ctx, ro.ID, tx)
+		if err != nil && !errors.Is(err, database.ErrNoRows) {
+			return nil, errors.Wrap(err, "could not GetAllRoleTags")
+		}
+
+		roleDBData = append(roleDBData, &RoleDBData{
+			Role:     ro,
+			Operator: operators.Operator(ro.Operator),
+			Tags:     tags,
+		})
+	}
+
+	return roleDBData, nil
+}
+
+func (r *AppSqliteRepository) GetAllRoleTags(ctx context.Context, roleID int64, tx database.Tx) (_ []Tag, err error) {
+	ctx, span := telemetry.StartSpan(ctx, r.deps.Telemetry(), "repository.app", "GetAllRoleTags")
+	defer telemetry.EndSpan(span, &err)
+
+	logger := r.deps.Logger()
+	level.Debug(logger).Message("calling GetAllRoleTags")
+
+	tags, err := r.queries.GetAllRoleTags(ctx, r.db(tx), roleID)
+	if err != nil {
+		return tags, err
+	}
+
+	return tags, nil
+}
+
+func (r *AppSqliteRepository) UpsertRoleTag(ctx context.Context, roleID, tagID int64, tx database.Tx) (rt RoleTag, err error) {
+	ctx, span := telemetry.StartSpan(ctx, r.deps.Telemetry(), "repository.app", "UpsertRoleTag")
+	defer telemetry.EndSpan(span, &err)
+
+	logger := r.deps.Logger()
+	level.Debug(logger).Message("calling UpsertRoleTag", keys.RoleID, roleID, keys.TagID, tagID)
+
+	inner := func(ctx context.Context, tx database.Tx) error {
+		rt, err = r.queries.UpsertRoleTag(ctx, tx, appdb.UpsertRoleTagParams{
+			TagID:  tagID,
+			RoleID: roleID,
+		})
+		return errors.Wrap(err, "could not UpsertRoleTag")
+	}
+
+	if tx == nil {
+		err = errors.Wrap(database.TransactWithRetries(ctx, r.deps.Telemetry(), r.deps.Logger(), r.deps.DB(), &sql.TxOptions{}, inner), "could not TransactWithRetries")
+	} else {
+		err = inner(ctx, tx)
+	}
+	return rt, err
+}
+
+func (r *AppSqliteRepository) DeleteRoleTags(ctx context.Context, roleID int64, tagIDs []int64, tx database.Tx) (err error) {
+	ctx, span := telemetry.StartSpan(ctx, r.deps.Telemetry(), "repository.app", "DeleteRoleTags")
+	defer telemetry.EndSpan(span, &err)
+
+	logger := r.deps.Logger()
+	level.Debug(logger).Message("calling DeleteRoleTags", keys.RoleID, roleID, keys.TagID, tagIDs)
+
+	inner := func(ctx context.Context, tx database.Tx) error {
+		err = r.queries.DeleteRoleTags(ctx, tx, appdb.DeleteRoleTagsParams{
+			RoleID: roleID,
+			TagIds: tagIDs,
+		})
+		return errors.Wrap(err, "could not DeleteRoleTags")
 	}
 
 	if tx == nil {

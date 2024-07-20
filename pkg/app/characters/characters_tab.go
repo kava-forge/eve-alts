@@ -16,10 +16,11 @@ import (
 	"github.com/kava-forge/eve-alts/pkg/repository"
 )
 
-func NewCharactersTab(deps dependencies, parent fyne.Window, tags *bindings.DataList[*repository.TagDBData]) (fyne.CanvasObject, *bindings.DataList[*repository.CharacterDBData]) {
+func NewCharactersTab(deps dependencies, parent fyne.Window, tags *bindings.DataList[*repository.TagDBData], roles *bindings.DataList[*repository.RoleDBData]) (fyne.CanvasObject, *bindings.DataList[*repository.CharacterDBData]) {
 	logger := logging.With(deps.Logger(), keys.Component, "MainWindow.CharactersTab")
 
 	tagFilters := NewTagFilter(deps, parent, tags)
+	roleFilters := NewRoleFilter(deps, parent, roles)
 
 	charLout := layout.NewGridWrapLayout(fyne.Size{Width: 500, Height: 128})
 	charContainer := container.New(charLout)
@@ -69,7 +70,7 @@ func NewCharactersTab(deps dependencies, parent fyne.Window, tags *bindings.Data
 				continue
 			}
 
-			cc := NewCharacterCard(deps, parent, chars.Child(i), tags, func(c *CharacterCard) {
+			cc := NewCharacterCard(deps, parent, chars.Child(i), tags, roles, func(c *CharacterCard) {
 				level.Debug(logger).Message("removing character card")
 				char, err := chars.GetValue(i)
 				if err != nil {
@@ -93,6 +94,7 @@ func NewCharactersTab(deps dependencies, parent fyne.Window, tags *bindings.Data
 			charContainer.Add(cc)
 
 			tagFilters.AttachAllToCharacter(cc)
+			roleFilters.AttachAllToCharacter(cc)
 		}
 
 		for charID, idx := range toDelete {
@@ -109,6 +111,7 @@ func NewCharactersTab(deps dependencies, parent fyne.Window, tags *bindings.Data
 
 	vbox := container.New(layout.NewVBoxLayout())
 	vbox.Add(buttonContainer)
+	vbox.Add(container.New(layout.NewPaddedLayout(), roleFilters.RoleSet))
 	vbox.Add(container.New(layout.NewPaddedLayout(), tagFilters.TagSet))
 	vbox.Add(charContainer)
 

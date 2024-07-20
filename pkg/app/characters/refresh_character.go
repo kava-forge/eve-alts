@@ -133,21 +133,3 @@ func RefreshCharacterData(ctx context.Context, deps dependencies, tok *oauth2.To
 
 	return data, nil
 }
-
-func CharacterMatchesTag(char *repository.CharacterDBData, tag *repository.TagDBData) (bool, []repository.TagSkill) {
-	charSkills := make(map[int64]int64, len(char.Skills))
-	for _, sk := range char.Skills {
-		charSkills[sk.SkillID] = sk.SkillLevel
-	}
-
-	missing := make([]repository.TagSkill, 0, len(tag.Skills))
-
-	for _, sk := range tag.Skills {
-		lvl, ok := charSkills[sk.SkillID]
-		if !ok || lvl < sk.SkillLevel {
-			missing = append(missing, sk)
-		}
-	}
-
-	return len(missing) == 0, missing
-}

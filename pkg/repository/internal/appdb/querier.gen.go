@@ -11,19 +11,26 @@ import (
 type Querier interface {
 	DeleteCharacter(ctx context.Context, db DBTX, id int64) error
 	DeleteCharacterSkills(ctx context.Context, db DBTX, arg DeleteCharacterSkillsParams) error
+	DeleteRole(ctx context.Context, db DBTX, id int64) error
+	DeleteRoleTags(ctx context.Context, db DBTX, arg DeleteRoleTagsParams) error
 	DeleteTag(ctx context.Context, db DBTX, id int64) error
 	DeleteTagSkills(ctx context.Context, db DBTX, arg DeleteTagSkillsParams) error
 	GetAllCharacterSkills(ctx context.Context, db DBTX, characterID int64) ([]CharacterSkill, error)
 	GetAllCharacters(ctx context.Context, db DBTX) ([]GetAllCharactersRow, error)
+	GetAllRoleTags(ctx context.Context, db DBTX, roleID int64) ([]Tag, error)
+	GetAllRoles(ctx context.Context, db DBTX) ([]Role, error)
 	GetAllTagSkills(ctx context.Context, db DBTX, tagID int64) ([]TagSkill, error)
 	GetAllTags(ctx context.Context, db DBTX) ([]Tag, error)
 	GetTokenForCharacter(ctx context.Context, db DBTX, characterID int64) (Token, error)
+	InsertRole(ctx context.Context, db DBTX, arg InsertRoleParams) (Role, error)
 	InsertTag(ctx context.Context, db DBTX, arg InsertTagParams) (Tag, error)
+	UpdateRole(ctx context.Context, db DBTX, arg UpdateRoleParams) error
 	UpdateTag(ctx context.Context, db DBTX, arg UpdateTagParams) error
 	UpsertAlliance(ctx context.Context, db DBTX, arg UpsertAllianceParams) (Alliance, error)
 	UpsertCharacter(ctx context.Context, db DBTX, arg UpsertCharacterParams) (Character, error)
 	UpsertCharacterSkill(ctx context.Context, db DBTX, arg UpsertCharacterSkillParams) (CharacterSkill, error)
 	UpsertCorporation(ctx context.Context, db DBTX, arg UpsertCorporationParams) (Corporation, error)
+	UpsertRoleTag(ctx context.Context, db DBTX, arg UpsertRoleTagParams) (RoleTag, error)
 	UpsertTagSkill(ctx context.Context, db DBTX, arg UpsertTagSkillParams) (TagSkill, error)
 	UpsertToken(ctx context.Context, db DBTX, arg UpsertTokenParams) (Token, error)
 }

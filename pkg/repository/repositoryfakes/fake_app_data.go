@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/kava-forge/eve-alts/pkg/database"
+	"github.com/kava-forge/eve-alts/pkg/operators"
 	"github.com/kava-forge/eve-alts/pkg/repository"
 	"github.com/kava-forge/eve-alts/pkg/repository/internal/appdb"
 )
@@ -38,6 +39,33 @@ type FakeAppData struct {
 		result1 error
 	}
 	deleteCharacterSkillsReturnsOnCall map[int]struct {
+		result1 error
+	}
+	DeleteRoleStub        func(context.Context, int64, database.Tx) error
+	deleteRoleMutex       sync.RWMutex
+	deleteRoleArgsForCall []struct {
+		arg1 context.Context
+		arg2 int64
+		arg3 database.Tx
+	}
+	deleteRoleReturns struct {
+		result1 error
+	}
+	deleteRoleReturnsOnCall map[int]struct {
+		result1 error
+	}
+	DeleteRoleTagsStub        func(context.Context, int64, []int64, database.Tx) error
+	deleteRoleTagsMutex       sync.RWMutex
+	deleteRoleTagsArgsForCall []struct {
+		arg1 context.Context
+		arg2 int64
+		arg3 []int64
+		arg4 database.Tx
+	}
+	deleteRoleTagsReturns struct {
+		result1 error
+	}
+	deleteRoleTagsReturnsOnCall map[int]struct {
 		result1 error
 	}
 	DeleteTagStub        func(context.Context, int64, database.Tx) error
@@ -96,6 +124,35 @@ type FakeAppData struct {
 		result1 []*repository.CharacterDBData
 		result2 error
 	}
+	GetAllRoleTagsStub        func(context.Context, int64, database.Tx) ([]appdb.Tag, error)
+	getAllRoleTagsMutex       sync.RWMutex
+	getAllRoleTagsArgsForCall []struct {
+		arg1 context.Context
+		arg2 int64
+		arg3 database.Tx
+	}
+	getAllRoleTagsReturns struct {
+		result1 []appdb.Tag
+		result2 error
+	}
+	getAllRoleTagsReturnsOnCall map[int]struct {
+		result1 []appdb.Tag
+		result2 error
+	}
+	GetAllRolesStub        func(context.Context, database.Tx) ([]*repository.RoleDBData, error)
+	getAllRolesMutex       sync.RWMutex
+	getAllRolesArgsForCall []struct {
+		arg1 context.Context
+		arg2 database.Tx
+	}
+	getAllRolesReturns struct {
+		result1 []*repository.RoleDBData
+		result2 error
+	}
+	getAllRolesReturnsOnCall map[int]struct {
+		result1 []*repository.RoleDBData
+		result2 error
+	}
 	GetAllTagSkillsStub        func(context.Context, int64, database.Tx) ([]appdb.TagSkill, error)
 	getAllTagSkillsMutex       sync.RWMutex
 	getAllTagSkillsArgsForCall []struct {
@@ -140,6 +197,24 @@ type FakeAppData struct {
 		result1 appdb.Token
 		result2 error
 	}
+	InsertRoleStub        func(context.Context, string, string, operators.Operator, color.Color, database.Tx) (appdb.Role, error)
+	insertRoleMutex       sync.RWMutex
+	insertRoleArgsForCall []struct {
+		arg1 context.Context
+		arg2 string
+		arg3 string
+		arg4 operators.Operator
+		arg5 color.Color
+		arg6 database.Tx
+	}
+	insertRoleReturns struct {
+		result1 appdb.Role
+		result2 error
+	}
+	insertRoleReturnsOnCall map[int]struct {
+		result1 appdb.Role
+		result2 error
+	}
 	InsertTagStub        func(context.Context, string, color.Color, database.Tx) (appdb.Tag, error)
 	insertTagMutex       sync.RWMutex
 	insertTagArgsForCall []struct {
@@ -155,6 +230,23 @@ type FakeAppData struct {
 	insertTagReturnsOnCall map[int]struct {
 		result1 appdb.Tag
 		result2 error
+	}
+	UpdateRoleStub        func(context.Context, int64, string, string, operators.Operator, color.Color, database.Tx) error
+	updateRoleMutex       sync.RWMutex
+	updateRoleArgsForCall []struct {
+		arg1 context.Context
+		arg2 int64
+		arg3 string
+		arg4 string
+		arg5 operators.Operator
+		arg6 color.Color
+		arg7 database.Tx
+	}
+	updateRoleReturns struct {
+		result1 error
+	}
+	updateRoleReturnsOnCall map[int]struct {
+		result1 error
 	}
 	UpdateTagStub        func(context.Context, int64, string, color.Color, database.Tx) error
 	updateTagMutex       sync.RWMutex
@@ -241,6 +333,22 @@ type FakeAppData struct {
 	}
 	upsertCorporationReturnsOnCall map[int]struct {
 		result1 appdb.Corporation
+		result2 error
+	}
+	UpsertRoleTagStub        func(context.Context, int64, int64, database.Tx) (appdb.RoleTag, error)
+	upsertRoleTagMutex       sync.RWMutex
+	upsertRoleTagArgsForCall []struct {
+		arg1 context.Context
+		arg2 int64
+		arg3 int64
+		arg4 database.Tx
+	}
+	upsertRoleTagReturns struct {
+		result1 appdb.RoleTag
+		result2 error
+	}
+	upsertRoleTagReturnsOnCall map[int]struct {
+		result1 appdb.RoleTag
 		result2 error
 	}
 	UpsertTagSkillStub        func(context.Context, int64, int64, int64, database.Tx) (appdb.TagSkill, error)
@@ -411,6 +519,138 @@ func (fake *FakeAppData) DeleteCharacterSkillsReturnsOnCall(i int, result1 error
 		})
 	}
 	fake.deleteCharacterSkillsReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeAppData) DeleteRole(arg1 context.Context, arg2 int64, arg3 database.Tx) error {
+	fake.deleteRoleMutex.Lock()
+	ret, specificReturn := fake.deleteRoleReturnsOnCall[len(fake.deleteRoleArgsForCall)]
+	fake.deleteRoleArgsForCall = append(fake.deleteRoleArgsForCall, struct {
+		arg1 context.Context
+		arg2 int64
+		arg3 database.Tx
+	}{arg1, arg2, arg3})
+	stub := fake.DeleteRoleStub
+	fakeReturns := fake.deleteRoleReturns
+	fake.recordInvocation("DeleteRole", []interface{}{arg1, arg2, arg3})
+	fake.deleteRoleMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeAppData) DeleteRoleCallCount() int {
+	fake.deleteRoleMutex.RLock()
+	defer fake.deleteRoleMutex.RUnlock()
+	return len(fake.deleteRoleArgsForCall)
+}
+
+func (fake *FakeAppData) DeleteRoleCalls(stub func(context.Context, int64, database.Tx) error) {
+	fake.deleteRoleMutex.Lock()
+	defer fake.deleteRoleMutex.Unlock()
+	fake.DeleteRoleStub = stub
+}
+
+func (fake *FakeAppData) DeleteRoleArgsForCall(i int) (context.Context, int64, database.Tx) {
+	fake.deleteRoleMutex.RLock()
+	defer fake.deleteRoleMutex.RUnlock()
+	argsForCall := fake.deleteRoleArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeAppData) DeleteRoleReturns(result1 error) {
+	fake.deleteRoleMutex.Lock()
+	defer fake.deleteRoleMutex.Unlock()
+	fake.DeleteRoleStub = nil
+	fake.deleteRoleReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeAppData) DeleteRoleReturnsOnCall(i int, result1 error) {
+	fake.deleteRoleMutex.Lock()
+	defer fake.deleteRoleMutex.Unlock()
+	fake.DeleteRoleStub = nil
+	if fake.deleteRoleReturnsOnCall == nil {
+		fake.deleteRoleReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteRoleReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeAppData) DeleteRoleTags(arg1 context.Context, arg2 int64, arg3 []int64, arg4 database.Tx) error {
+	var arg3Copy []int64
+	if arg3 != nil {
+		arg3Copy = make([]int64, len(arg3))
+		copy(arg3Copy, arg3)
+	}
+	fake.deleteRoleTagsMutex.Lock()
+	ret, specificReturn := fake.deleteRoleTagsReturnsOnCall[len(fake.deleteRoleTagsArgsForCall)]
+	fake.deleteRoleTagsArgsForCall = append(fake.deleteRoleTagsArgsForCall, struct {
+		arg1 context.Context
+		arg2 int64
+		arg3 []int64
+		arg4 database.Tx
+	}{arg1, arg2, arg3Copy, arg4})
+	stub := fake.DeleteRoleTagsStub
+	fakeReturns := fake.deleteRoleTagsReturns
+	fake.recordInvocation("DeleteRoleTags", []interface{}{arg1, arg2, arg3Copy, arg4})
+	fake.deleteRoleTagsMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeAppData) DeleteRoleTagsCallCount() int {
+	fake.deleteRoleTagsMutex.RLock()
+	defer fake.deleteRoleTagsMutex.RUnlock()
+	return len(fake.deleteRoleTagsArgsForCall)
+}
+
+func (fake *FakeAppData) DeleteRoleTagsCalls(stub func(context.Context, int64, []int64, database.Tx) error) {
+	fake.deleteRoleTagsMutex.Lock()
+	defer fake.deleteRoleTagsMutex.Unlock()
+	fake.DeleteRoleTagsStub = stub
+}
+
+func (fake *FakeAppData) DeleteRoleTagsArgsForCall(i int) (context.Context, int64, []int64, database.Tx) {
+	fake.deleteRoleTagsMutex.RLock()
+	defer fake.deleteRoleTagsMutex.RUnlock()
+	argsForCall := fake.deleteRoleTagsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+}
+
+func (fake *FakeAppData) DeleteRoleTagsReturns(result1 error) {
+	fake.deleteRoleTagsMutex.Lock()
+	defer fake.deleteRoleTagsMutex.Unlock()
+	fake.DeleteRoleTagsStub = nil
+	fake.deleteRoleTagsReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeAppData) DeleteRoleTagsReturnsOnCall(i int, result1 error) {
+	fake.deleteRoleTagsMutex.Lock()
+	defer fake.deleteRoleTagsMutex.Unlock()
+	fake.DeleteRoleTagsStub = nil
+	if fake.deleteRoleTagsReturnsOnCall == nil {
+		fake.deleteRoleTagsReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteRoleTagsReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -678,6 +918,137 @@ func (fake *FakeAppData) GetAllCharactersReturnsOnCall(i int, result1 []*reposit
 	}{result1, result2}
 }
 
+func (fake *FakeAppData) GetAllRoleTags(arg1 context.Context, arg2 int64, arg3 database.Tx) ([]appdb.Tag, error) {
+	fake.getAllRoleTagsMutex.Lock()
+	ret, specificReturn := fake.getAllRoleTagsReturnsOnCall[len(fake.getAllRoleTagsArgsForCall)]
+	fake.getAllRoleTagsArgsForCall = append(fake.getAllRoleTagsArgsForCall, struct {
+		arg1 context.Context
+		arg2 int64
+		arg3 database.Tx
+	}{arg1, arg2, arg3})
+	stub := fake.GetAllRoleTagsStub
+	fakeReturns := fake.getAllRoleTagsReturns
+	fake.recordInvocation("GetAllRoleTags", []interface{}{arg1, arg2, arg3})
+	fake.getAllRoleTagsMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeAppData) GetAllRoleTagsCallCount() int {
+	fake.getAllRoleTagsMutex.RLock()
+	defer fake.getAllRoleTagsMutex.RUnlock()
+	return len(fake.getAllRoleTagsArgsForCall)
+}
+
+func (fake *FakeAppData) GetAllRoleTagsCalls(stub func(context.Context, int64, database.Tx) ([]appdb.Tag, error)) {
+	fake.getAllRoleTagsMutex.Lock()
+	defer fake.getAllRoleTagsMutex.Unlock()
+	fake.GetAllRoleTagsStub = stub
+}
+
+func (fake *FakeAppData) GetAllRoleTagsArgsForCall(i int) (context.Context, int64, database.Tx) {
+	fake.getAllRoleTagsMutex.RLock()
+	defer fake.getAllRoleTagsMutex.RUnlock()
+	argsForCall := fake.getAllRoleTagsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeAppData) GetAllRoleTagsReturns(result1 []appdb.Tag, result2 error) {
+	fake.getAllRoleTagsMutex.Lock()
+	defer fake.getAllRoleTagsMutex.Unlock()
+	fake.GetAllRoleTagsStub = nil
+	fake.getAllRoleTagsReturns = struct {
+		result1 []appdb.Tag
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeAppData) GetAllRoleTagsReturnsOnCall(i int, result1 []appdb.Tag, result2 error) {
+	fake.getAllRoleTagsMutex.Lock()
+	defer fake.getAllRoleTagsMutex.Unlock()
+	fake.GetAllRoleTagsStub = nil
+	if fake.getAllRoleTagsReturnsOnCall == nil {
+		fake.getAllRoleTagsReturnsOnCall = make(map[int]struct {
+			result1 []appdb.Tag
+			result2 error
+		})
+	}
+	fake.getAllRoleTagsReturnsOnCall[i] = struct {
+		result1 []appdb.Tag
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeAppData) GetAllRoles(arg1 context.Context, arg2 database.Tx) ([]*repository.RoleDBData, error) {
+	fake.getAllRolesMutex.Lock()
+	ret, specificReturn := fake.getAllRolesReturnsOnCall[len(fake.getAllRolesArgsForCall)]
+	fake.getAllRolesArgsForCall = append(fake.getAllRolesArgsForCall, struct {
+		arg1 context.Context
+		arg2 database.Tx
+	}{arg1, arg2})
+	stub := fake.GetAllRolesStub
+	fakeReturns := fake.getAllRolesReturns
+	fake.recordInvocation("GetAllRoles", []interface{}{arg1, arg2})
+	fake.getAllRolesMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeAppData) GetAllRolesCallCount() int {
+	fake.getAllRolesMutex.RLock()
+	defer fake.getAllRolesMutex.RUnlock()
+	return len(fake.getAllRolesArgsForCall)
+}
+
+func (fake *FakeAppData) GetAllRolesCalls(stub func(context.Context, database.Tx) ([]*repository.RoleDBData, error)) {
+	fake.getAllRolesMutex.Lock()
+	defer fake.getAllRolesMutex.Unlock()
+	fake.GetAllRolesStub = stub
+}
+
+func (fake *FakeAppData) GetAllRolesArgsForCall(i int) (context.Context, database.Tx) {
+	fake.getAllRolesMutex.RLock()
+	defer fake.getAllRolesMutex.RUnlock()
+	argsForCall := fake.getAllRolesArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeAppData) GetAllRolesReturns(result1 []*repository.RoleDBData, result2 error) {
+	fake.getAllRolesMutex.Lock()
+	defer fake.getAllRolesMutex.Unlock()
+	fake.GetAllRolesStub = nil
+	fake.getAllRolesReturns = struct {
+		result1 []*repository.RoleDBData
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeAppData) GetAllRolesReturnsOnCall(i int, result1 []*repository.RoleDBData, result2 error) {
+	fake.getAllRolesMutex.Lock()
+	defer fake.getAllRolesMutex.Unlock()
+	fake.GetAllRolesStub = nil
+	if fake.getAllRolesReturnsOnCall == nil {
+		fake.getAllRolesReturnsOnCall = make(map[int]struct {
+			result1 []*repository.RoleDBData
+			result2 error
+		})
+	}
+	fake.getAllRolesReturnsOnCall[i] = struct {
+		result1 []*repository.RoleDBData
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeAppData) GetAllTagSkills(arg1 context.Context, arg2 int64, arg3 database.Tx) ([]appdb.TagSkill, error) {
 	fake.getAllTagSkillsMutex.Lock()
 	ret, specificReturn := fake.getAllTagSkillsReturnsOnCall[len(fake.getAllTagSkillsArgsForCall)]
@@ -875,6 +1246,75 @@ func (fake *FakeAppData) GetTokenForCharacterReturnsOnCall(i int, result1 appdb.
 	}{result1, result2}
 }
 
+func (fake *FakeAppData) InsertRole(arg1 context.Context, arg2 string, arg3 string, arg4 operators.Operator, arg5 color.Color, arg6 database.Tx) (appdb.Role, error) {
+	fake.insertRoleMutex.Lock()
+	ret, specificReturn := fake.insertRoleReturnsOnCall[len(fake.insertRoleArgsForCall)]
+	fake.insertRoleArgsForCall = append(fake.insertRoleArgsForCall, struct {
+		arg1 context.Context
+		arg2 string
+		arg3 string
+		arg4 operators.Operator
+		arg5 color.Color
+		arg6 database.Tx
+	}{arg1, arg2, arg3, arg4, arg5, arg6})
+	stub := fake.InsertRoleStub
+	fakeReturns := fake.insertRoleReturns
+	fake.recordInvocation("InsertRole", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6})
+	fake.insertRoleMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeAppData) InsertRoleCallCount() int {
+	fake.insertRoleMutex.RLock()
+	defer fake.insertRoleMutex.RUnlock()
+	return len(fake.insertRoleArgsForCall)
+}
+
+func (fake *FakeAppData) InsertRoleCalls(stub func(context.Context, string, string, operators.Operator, color.Color, database.Tx) (appdb.Role, error)) {
+	fake.insertRoleMutex.Lock()
+	defer fake.insertRoleMutex.Unlock()
+	fake.InsertRoleStub = stub
+}
+
+func (fake *FakeAppData) InsertRoleArgsForCall(i int) (context.Context, string, string, operators.Operator, color.Color, database.Tx) {
+	fake.insertRoleMutex.RLock()
+	defer fake.insertRoleMutex.RUnlock()
+	argsForCall := fake.insertRoleArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6
+}
+
+func (fake *FakeAppData) InsertRoleReturns(result1 appdb.Role, result2 error) {
+	fake.insertRoleMutex.Lock()
+	defer fake.insertRoleMutex.Unlock()
+	fake.InsertRoleStub = nil
+	fake.insertRoleReturns = struct {
+		result1 appdb.Role
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeAppData) InsertRoleReturnsOnCall(i int, result1 appdb.Role, result2 error) {
+	fake.insertRoleMutex.Lock()
+	defer fake.insertRoleMutex.Unlock()
+	fake.InsertRoleStub = nil
+	if fake.insertRoleReturnsOnCall == nil {
+		fake.insertRoleReturnsOnCall = make(map[int]struct {
+			result1 appdb.Role
+			result2 error
+		})
+	}
+	fake.insertRoleReturnsOnCall[i] = struct {
+		result1 appdb.Role
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeAppData) InsertTag(arg1 context.Context, arg2 string, arg3 color.Color, arg4 database.Tx) (appdb.Tag, error) {
 	fake.insertTagMutex.Lock()
 	ret, specificReturn := fake.insertTagReturnsOnCall[len(fake.insertTagArgsForCall)]
@@ -940,6 +1380,73 @@ func (fake *FakeAppData) InsertTagReturnsOnCall(i int, result1 appdb.Tag, result
 		result1 appdb.Tag
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeAppData) UpdateRole(arg1 context.Context, arg2 int64, arg3 string, arg4 string, arg5 operators.Operator, arg6 color.Color, arg7 database.Tx) error {
+	fake.updateRoleMutex.Lock()
+	ret, specificReturn := fake.updateRoleReturnsOnCall[len(fake.updateRoleArgsForCall)]
+	fake.updateRoleArgsForCall = append(fake.updateRoleArgsForCall, struct {
+		arg1 context.Context
+		arg2 int64
+		arg3 string
+		arg4 string
+		arg5 operators.Operator
+		arg6 color.Color
+		arg7 database.Tx
+	}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
+	stub := fake.UpdateRoleStub
+	fakeReturns := fake.updateRoleReturns
+	fake.recordInvocation("UpdateRole", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
+	fake.updateRoleMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeAppData) UpdateRoleCallCount() int {
+	fake.updateRoleMutex.RLock()
+	defer fake.updateRoleMutex.RUnlock()
+	return len(fake.updateRoleArgsForCall)
+}
+
+func (fake *FakeAppData) UpdateRoleCalls(stub func(context.Context, int64, string, string, operators.Operator, color.Color, database.Tx) error) {
+	fake.updateRoleMutex.Lock()
+	defer fake.updateRoleMutex.Unlock()
+	fake.UpdateRoleStub = stub
+}
+
+func (fake *FakeAppData) UpdateRoleArgsForCall(i int) (context.Context, int64, string, string, operators.Operator, color.Color, database.Tx) {
+	fake.updateRoleMutex.RLock()
+	defer fake.updateRoleMutex.RUnlock()
+	argsForCall := fake.updateRoleArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7
+}
+
+func (fake *FakeAppData) UpdateRoleReturns(result1 error) {
+	fake.updateRoleMutex.Lock()
+	defer fake.updateRoleMutex.Unlock()
+	fake.UpdateRoleStub = nil
+	fake.updateRoleReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeAppData) UpdateRoleReturnsOnCall(i int, result1 error) {
+	fake.updateRoleMutex.Lock()
+	defer fake.updateRoleMutex.Unlock()
+	fake.UpdateRoleStub = nil
+	if fake.updateRoleReturnsOnCall == nil {
+		fake.updateRoleReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.updateRoleReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeAppData) UpdateTag(arg1 context.Context, arg2 int64, arg3 string, arg4 color.Color, arg5 database.Tx) error {
@@ -1283,6 +1790,73 @@ func (fake *FakeAppData) UpsertCorporationReturnsOnCall(i int, result1 appdb.Cor
 	}{result1, result2}
 }
 
+func (fake *FakeAppData) UpsertRoleTag(arg1 context.Context, arg2 int64, arg3 int64, arg4 database.Tx) (appdb.RoleTag, error) {
+	fake.upsertRoleTagMutex.Lock()
+	ret, specificReturn := fake.upsertRoleTagReturnsOnCall[len(fake.upsertRoleTagArgsForCall)]
+	fake.upsertRoleTagArgsForCall = append(fake.upsertRoleTagArgsForCall, struct {
+		arg1 context.Context
+		arg2 int64
+		arg3 int64
+		arg4 database.Tx
+	}{arg1, arg2, arg3, arg4})
+	stub := fake.UpsertRoleTagStub
+	fakeReturns := fake.upsertRoleTagReturns
+	fake.recordInvocation("UpsertRoleTag", []interface{}{arg1, arg2, arg3, arg4})
+	fake.upsertRoleTagMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeAppData) UpsertRoleTagCallCount() int {
+	fake.upsertRoleTagMutex.RLock()
+	defer fake.upsertRoleTagMutex.RUnlock()
+	return len(fake.upsertRoleTagArgsForCall)
+}
+
+func (fake *FakeAppData) UpsertRoleTagCalls(stub func(context.Context, int64, int64, database.Tx) (appdb.RoleTag, error)) {
+	fake.upsertRoleTagMutex.Lock()
+	defer fake.upsertRoleTagMutex.Unlock()
+	fake.UpsertRoleTagStub = stub
+}
+
+func (fake *FakeAppData) UpsertRoleTagArgsForCall(i int) (context.Context, int64, int64, database.Tx) {
+	fake.upsertRoleTagMutex.RLock()
+	defer fake.upsertRoleTagMutex.RUnlock()
+	argsForCall := fake.upsertRoleTagArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+}
+
+func (fake *FakeAppData) UpsertRoleTagReturns(result1 appdb.RoleTag, result2 error) {
+	fake.upsertRoleTagMutex.Lock()
+	defer fake.upsertRoleTagMutex.Unlock()
+	fake.UpsertRoleTagStub = nil
+	fake.upsertRoleTagReturns = struct {
+		result1 appdb.RoleTag
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeAppData) UpsertRoleTagReturnsOnCall(i int, result1 appdb.RoleTag, result2 error) {
+	fake.upsertRoleTagMutex.Lock()
+	defer fake.upsertRoleTagMutex.Unlock()
+	fake.UpsertRoleTagStub = nil
+	if fake.upsertRoleTagReturnsOnCall == nil {
+		fake.upsertRoleTagReturnsOnCall = make(map[int]struct {
+			result1 appdb.RoleTag
+			result2 error
+		})
+	}
+	fake.upsertRoleTagReturnsOnCall[i] = struct {
+		result1 appdb.RoleTag
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeAppData) UpsertTagSkill(arg1 context.Context, arg2 int64, arg3 int64, arg4 int64, arg5 database.Tx) (appdb.TagSkill, error) {
 	fake.upsertTagSkillMutex.Lock()
 	ret, specificReturn := fake.upsertTagSkillReturnsOnCall[len(fake.upsertTagSkillArgsForCall)]
@@ -1428,6 +2002,10 @@ func (fake *FakeAppData) Invocations() map[string][][]interface{} {
 	defer fake.deleteCharacterMutex.RUnlock()
 	fake.deleteCharacterSkillsMutex.RLock()
 	defer fake.deleteCharacterSkillsMutex.RUnlock()
+	fake.deleteRoleMutex.RLock()
+	defer fake.deleteRoleMutex.RUnlock()
+	fake.deleteRoleTagsMutex.RLock()
+	defer fake.deleteRoleTagsMutex.RUnlock()
 	fake.deleteTagMutex.RLock()
 	defer fake.deleteTagMutex.RUnlock()
 	fake.deleteTagSkillsMutex.RLock()
@@ -1436,14 +2014,22 @@ func (fake *FakeAppData) Invocations() map[string][][]interface{} {
 	defer fake.getAllCharacterSkillsMutex.RUnlock()
 	fake.getAllCharactersMutex.RLock()
 	defer fake.getAllCharactersMutex.RUnlock()
+	fake.getAllRoleTagsMutex.RLock()
+	defer fake.getAllRoleTagsMutex.RUnlock()
+	fake.getAllRolesMutex.RLock()
+	defer fake.getAllRolesMutex.RUnlock()
 	fake.getAllTagSkillsMutex.RLock()
 	defer fake.getAllTagSkillsMutex.RUnlock()
 	fake.getAllTagsMutex.RLock()
 	defer fake.getAllTagsMutex.RUnlock()
 	fake.getTokenForCharacterMutex.RLock()
 	defer fake.getTokenForCharacterMutex.RUnlock()
+	fake.insertRoleMutex.RLock()
+	defer fake.insertRoleMutex.RUnlock()
 	fake.insertTagMutex.RLock()
 	defer fake.insertTagMutex.RUnlock()
+	fake.updateRoleMutex.RLock()
+	defer fake.updateRoleMutex.RUnlock()
 	fake.updateTagMutex.RLock()
 	defer fake.updateTagMutex.RUnlock()
 	fake.upsertAllianceMutex.RLock()
@@ -1454,6 +2040,8 @@ func (fake *FakeAppData) Invocations() map[string][][]interface{} {
 	defer fake.upsertCharacterSkillMutex.RUnlock()
 	fake.upsertCorporationMutex.RLock()
 	defer fake.upsertCorporationMutex.RUnlock()
+	fake.upsertRoleTagMutex.RLock()
+	defer fake.upsertRoleTagMutex.RUnlock()
 	fake.upsertTagSkillMutex.RLock()
 	defer fake.upsertTagSkillMutex.RUnlock()
 	fake.upsertTokenMutex.RLock()

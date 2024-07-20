@@ -8,6 +8,7 @@ package tools
 
 import (
 	_ "fyne.io/fyne/v2/cmd/fyne"
+	_ "github.com/abice/go-enum"
 	_ "github.com/fyne-io/fyne-cross"
 	_ "github.com/golang-migrate/migrate/v4/cmd/migrate"
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
