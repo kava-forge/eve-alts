@@ -60,46 +60,16 @@ func (tf *TagFilter) update() {
 			continue
 		}
 
-		tf.Add(tf.tags.Child(i))
+		tf.add(tf.tags.Child(i))
 
 		for _, cc := range tf.attachedCharacters {
 			tf.AttachToCharacter(cc, t.StrID(), tf.tagState.Child(t.StrID()))
 		}
 	}
+	tf.TagSet.Refresh()
 }
 
-// func (tf *TagFilter) resetIfAllOff() {
-// 	defer tf.TagSet.Refresh()
-
-// 	logger := logging.With(tf.deps.Logger(), keys.Component, "TagFilter.resetIfAllOff")
-
-// 	data, err := tf.tagState.Get()
-// 	if err != nil {
-// 		apperrors.Show(logger, tf.parent, apperrors.Error(
-// 			"Could not load tag data",
-// 			apperrors.WithCause(err),
-// 		), nil)
-// 		return
-// 	}
-
-// 	anyOn := false
-
-// 	for _, v := range data {
-// 		if v {
-// 			anyOn = true
-// 		}
-// 	}
-
-// 	if !anyOn {
-// 		for k := range data {
-// 			tf.tagState.SetValue(k, true)
-// 		}
-// 	}
-// }
-
-func (tf *TagFilter) Add(tagData bindings.DataProxy[*repository.TagDBData]) {
-	defer tf.TagSet.Refresh()
-
+func (tf *TagFilter) add(tagData bindings.DataProxy[*repository.TagDBData]) {
 	logger := logging.With(tf.deps.Logger(), keys.Component, "TagFilter.Add")
 
 	tag, err := tagData.Get()
@@ -126,9 +96,6 @@ func (tf *TagFilter) Add(tagData bindings.DataProxy[*repository.TagDBData]) {
 	stateChild := tf.tagState.Child(tag.StrID())
 	tmt := tags.NewTagMiniTag(tf.deps, tf.parent, tagData, stateChild)
 	tf.TagSet.Add(tmt)
-
-	// tf.resetIfAllOff()
-	// stateChild.AddListener(binding.NewDataListener(tf.resetIfAllOff))
 }
 
 func (tf *TagFilter) AttachAllToCharacter(cc *CharacterCard) {
@@ -151,7 +118,7 @@ func (tf *TagFilter) AttachToCharacter(cc *CharacterCard, tagID string, tagSelec
 
 	level.Info(logger).Message("attaching to character", "tag_id", tagID)
 
-	tagSelected.AddListener(binding.NewDataListener(func() {
+	tagSelected.AddListener(bindings.NewListener(func() {
 		level.Debug(logger).Message("refreshing character for filter change")
 		selected, err := tagSelected.Get()
 		if err != nil {
@@ -162,7 +129,6 @@ func (tf *TagFilter) AttachToCharacter(cc *CharacterCard, tagID string, tagSelec
 			return
 		}
 
-		cc.selectedTags[tagID] = selected
-		cc.redraw()
+		cc.UpdateTagSelection(tagID, selected)
 	}))
 }

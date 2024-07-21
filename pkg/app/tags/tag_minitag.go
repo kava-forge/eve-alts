@@ -1,8 +1,9 @@
 package tags
 
 import (
+	"sync"
+
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
 
 	"github.com/kava-forge/eve-alts/lib/logging"
@@ -22,6 +23,8 @@ type TagMiniTag struct {
 	parent   fyne.Window
 	tag      bindings.DataProxy[*repository.TagDBData]
 	selected bindings.DataProxy[bool]
+
+	update *sync.RWMutex
 }
 
 func NewTagMiniTag(deps dependencies, parent fyne.Window, tagData bindings.DataProxy[*repository.TagDBData], selected bindings.DataProxy[bool]) *TagMiniTag {
@@ -42,20 +45,24 @@ func NewTagMiniTag(deps dependencies, parent fyne.Window, tagData bindings.DataP
 		parent:   parent,
 		tag:      tagData,
 		selected: selected,
+
+		update: &sync.RWMutex{},
 	}
 
 	tmt.MiniTag.UnDimmedBold = true
 
 	tmt.redraw()
 
-	tagData.AddListener(binding.NewDataListener(tmt.redraw))
-	selected.AddListener(binding.NewDataListener(tmt.redraw))
+	tagData.AddListener(bindings.NewListener(tmt.redraw))
+	selected.AddListener(bindings.NewListener(tmt.redraw))
 
 	return tmt
 }
 
 func (c *TagMiniTag) redraw() {
+	c.update.Lock()
 	defer c.Refresh()
+	defer c.update.Unlock()
 
 	logger := logging.With(c.deps.Logger(), keys.Component, "TagMiniTag.redraw")
 
@@ -90,7 +97,7 @@ func (c *TagMiniTag) redraw() {
 	c.SetText(tag.Tag.Name)
 	c.ColorSwatch.SetColor(tag.Color())
 	c.MiniTag.Dimmed = !selected
-	c.RefreshStyle()
+	c.MiniTag.RefreshStyle()
 	c.MiniTag.Resize(c.MiniTag.Size())
 }
 

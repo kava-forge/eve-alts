@@ -2,9 +2,9 @@ package characters
 
 import (
 	"fmt"
+	"sync"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
 
 	"github.com/kava-forge/eve-alts/lib/logging"
@@ -28,6 +28,8 @@ type RoleMiniTag struct {
 	knownTags map[int64]bool
 	isMatch   bool
 	missing   []string
+
+	update *sync.RWMutex
 }
 
 func NewRoleMiniTag(deps dependencies, parent fyne.Window, char bindings.DataProxy[*repository.CharacterDBData], role bindings.DataProxy[*repository.RoleDBData], tags *bindings.DataList[*repository.TagDBData]) *RoleMiniTag {
@@ -50,14 +52,16 @@ func NewRoleMiniTag(deps dependencies, parent fyne.Window, char bindings.DataPro
 		role:      role,
 		tags:      tags,
 		knownTags: map[int64]bool{},
+
+		update: &sync.RWMutex{},
 	}
 
 	cmt.addTag()
 	cmt.redraw()
 
-	char.AddListener(binding.NewDataListener(cmt.redraw))
-	role.AddListener(binding.NewDataListener(cmt.redraw))
-	tags.AddListener(binding.NewDataListener(func() {
+	char.AddListener(bindings.NewListener(cmt.redraw))
+	role.AddListener(bindings.NewListener(cmt.redraw))
+	tags.AddListener(bindings.NewListener(func() {
 		cmt.addTag()
 		cmt.redraw()
 	}))
@@ -66,6 +70,9 @@ func NewRoleMiniTag(deps dependencies, parent fyne.Window, char bindings.DataPro
 }
 
 func (c *RoleMiniTag) addTag() {
+	c.update.Lock()
+	defer c.update.Unlock()
+
 	logger := logging.With(c.deps.Logger(), keys.Component, "RoleMiniTag.addTag")
 
 	for i := range c.tags.Length() {
@@ -79,14 +86,16 @@ func (c *RoleMiniTag) addTag() {
 			continue
 		}
 
-		c.tags.Child(i).AddListener(binding.NewDataListener(c.redraw))
+		c.tags.Child(i).AddListener(bindings.NewListener(c.redraw))
 
 		c.knownTags[t.Tag.ID] = true
 	}
 }
 
 func (c *RoleMiniTag) redraw() {
+	c.update.Lock()
 	defer c.Refresh()
+	defer c.update.Unlock()
 
 	logger := logging.With(c.deps.Logger(), keys.Component, "RoleMiniTag.redraw")
 
@@ -132,7 +141,7 @@ func (c *RoleMiniTag) redraw() {
 	c.ColorSwatch.SetColor(role.Color())
 	c.isMatch = isMatch
 	c.MiniTag.Dimmed = !c.isMatch
-	c.RefreshStyle()
+	c.MiniTag.RefreshStyle()
 
 	c.missing = c.missing[:0]
 	for _, m := range missing {

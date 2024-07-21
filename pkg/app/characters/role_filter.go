@@ -59,17 +59,16 @@ func (tf *RoleFilter) update() {
 			continue
 		}
 
-		tf.Add(tf.roles.Child(i))
+		tf.add(tf.roles.Child(i))
 
 		for _, cc := range tf.attachedCharacters {
 			tf.AttachToCharacter(cc, r.StrID(), tf.roleState.Child(r.StrID()))
 		}
 	}
+	tf.RoleSet.Refresh()
 }
 
-func (tf *RoleFilter) Add(roleData bindings.DataProxy[*repository.RoleDBData]) {
-	defer tf.RoleSet.Refresh()
-
+func (tf *RoleFilter) add(roleData bindings.DataProxy[*repository.RoleDBData]) {
 	logger := logging.With(tf.deps.Logger(), keys.Component, "RoleFilter.Add")
 
 	role, err := roleData.Get()
@@ -118,7 +117,7 @@ func (tf *RoleFilter) AttachToCharacter(cc *CharacterCard, roleID string, roleSe
 
 	level.Info(logger).Message("attaching to character", "role_id", roleID)
 
-	roleSelected.AddListener(binding.NewDataListener(func() {
+	roleSelected.AddListener(bindings.NewListener(func() {
 		level.Debug(logger).Message("refreshing character for role filter change")
 		selected, err := roleSelected.Get()
 		if err != nil {
@@ -129,7 +128,6 @@ func (tf *RoleFilter) AttachToCharacter(cc *CharacterCard, roleID string, roleSe
 			return
 		}
 
-		cc.selectedRoles[roleID] = selected
-		cc.redraw()
+		cc.UpdateRoleSelection(roleID, selected)
 	}))
 }

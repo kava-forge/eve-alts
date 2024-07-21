@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"sync"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -39,53 +40,68 @@ func NewMainWindow(deps dependencies, a fyne.App) fyne.Window {
 
 	a.Lifecycle().SetOnStarted(func() {
 		ctx := context.Background()
-		knownChars, err := deps.AppRepo().GetAllCharacters(ctx, nil)
-		if err != nil && !errors.Is(err, database.ErrNoRows) {
-			apperrors.Show(logger, w, apperrors.Error(
-				"Could not load character data",
-				apperrors.WithCause(err),
-			), nil)
-		} else {
-			level.Debug(logger).Message("initial characters loaded")
-			if err := chars.Set(knownChars); err != nil {
-				apperrors.Show(logger, w, apperrors.Error(
-					"Could not set character list data",
-					apperrors.WithCause(err),
-				), nil)
-			}
-		}
 
-		knownTags, err := deps.AppRepo().GetAllTags(ctx, nil)
-		if err != nil && !errors.Is(err, database.ErrNoRows) {
-			apperrors.Show(logger, w, apperrors.Error(
-				"Could not load tags data",
-				apperrors.WithCause(err),
-			), nil)
-		} else {
-			level.Debug(logger).Message("initial tags loaded")
-			if err := tags.Set(knownTags); err != nil {
-				apperrors.Show(logger, w, apperrors.Error(
-					"Could not set tags list data",
-					apperrors.WithCause(err),
-				), nil)
-			}
-		}
+		wg := &sync.WaitGroup{}
 
-		knownRoles, err := deps.AppRepo().GetAllRoles(ctx, nil)
-		if err != nil && !errors.Is(err, database.ErrNoRows) {
-			apperrors.Show(logger, w, apperrors.Error(
-				"Could not load roles data",
-				apperrors.WithCause(err),
-			), nil)
-		} else {
-			level.Debug(logger).Message("initial roles loaded")
-			if err := roles.Set(knownRoles); err != nil {
+		wg.Add(3)
+
+		go func() {
+			defer wg.Done()
+			knownChars, err := deps.AppRepo().GetAllCharacters(ctx, nil)
+			if err != nil && !errors.Is(err, database.ErrNoRows) {
 				apperrors.Show(logger, w, apperrors.Error(
-					"Could not set roles list data",
+					"Could not load character data",
 					apperrors.WithCause(err),
 				), nil)
+			} else {
+				level.Debug(logger).Message("initial characters loaded")
+				if err := chars.Set(knownChars); err != nil {
+					apperrors.Show(logger, w, apperrors.Error(
+						"Could not set character list data",
+						apperrors.WithCause(err),
+					), nil)
+				}
 			}
-		}
+		}()
+
+		go func() {
+			defer wg.Done()
+			knownTags, err := deps.AppRepo().GetAllTags(ctx, nil)
+			if err != nil && !errors.Is(err, database.ErrNoRows) {
+				apperrors.Show(logger, w, apperrors.Error(
+					"Could not load tags data",
+					apperrors.WithCause(err),
+				), nil)
+			} else {
+				level.Debug(logger).Message("initial tags loaded")
+				if err := tags.Set(knownTags); err != nil {
+					apperrors.Show(logger, w, apperrors.Error(
+						"Could not set tags list data",
+						apperrors.WithCause(err),
+					), nil)
+				}
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+			knownRoles, err := deps.AppRepo().GetAllRoles(ctx, nil)
+			if err != nil && !errors.Is(err, database.ErrNoRows) {
+				apperrors.Show(logger, w, apperrors.Error(
+					"Could not load roles data",
+					apperrors.WithCause(err),
+				), nil)
+			} else {
+				level.Debug(logger).Message("initial roles loaded")
+				if err := roles.Set(knownRoles); err != nil {
+					apperrors.Show(logger, w, apperrors.Error(
+						"Could not set roles list data",
+						apperrors.WithCause(err),
+					), nil)
+				}
+			}
+		}()
+		wg.Wait()
 	})
 
 	return w

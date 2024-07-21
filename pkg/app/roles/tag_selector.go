@@ -65,8 +65,9 @@ func (tf *TagSelector) update() {
 			continue
 		}
 
-		tf.Add(tf.tags.Child(i))
+		tf.add(tf.tags.Child(i))
 	}
+	tf.TagSet.Refresh()
 }
 
 func (tf *TagSelector) Selected() []int64 {
@@ -131,9 +132,7 @@ func (tf *TagSelector) Clear() {
 	}
 }
 
-func (tf *TagSelector) Add(tagData bindings.DataProxy[*repository.TagDBData]) {
-	defer tf.TagSet.Refresh()
-
+func (tf *TagSelector) add(tagData bindings.DataProxy[*repository.TagDBData]) {
 	logger := logging.With(tf.deps.Logger(), keys.Component, "TagSelector.Add")
 
 	tag, err := tagData.Get()

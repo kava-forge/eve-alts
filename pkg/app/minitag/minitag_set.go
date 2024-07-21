@@ -77,7 +77,7 @@ func (c *MiniTagSet[S, T]) Layout(sz fyne.Size) {
 		}
 
 		tsi.Show()
-		tsi.Refresh()
+		// tsi.Refresh()
 		remain := sz.Width - x
 
 		mtsz := tsi.MinSize()

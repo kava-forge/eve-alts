@@ -3,9 +3,9 @@ package tags
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -31,6 +31,8 @@ type TagCard struct {
 	ColorSwatch  *colors.ColorSwatch
 	EditButton   *widget.Button
 	DeleteButton *widget.Button
+
+	update *sync.RWMutex
 }
 
 func NewTagCard(deps dependencies, parent fyne.Window, dataTag bindings.DataProxy[*repository.TagDBData], deleteFunc func(c *TagCard), editFunc func(bindings.DataProxy[*repository.TagDBData], func())) *TagCard {
@@ -58,17 +60,19 @@ func NewTagCard(deps dependencies, parent fyne.Window, dataTag bindings.DataProx
 		// DeleteButton: widget.NewButtonWithIcon("delete", theme.DeleteIcon(), nil),
 		EditButton:   widget.NewButton("edit", nil),
 		DeleteButton: widget.NewButton("delete", nil),
+
+		update: &sync.RWMutex{},
 	}
 	cc.ExtendBaseWidget(cc)
 
-	cc.RefreshStyle()
+	cc.refreshStyle()
 	cc.ColorSwatch.SetCornerRadius(theme.InnerPadding() / 2)
 
 	cc.EditButton.OnTapped = cc.editTag(editFunc)
 	cc.DeleteButton.OnTapped = cc.deleteTag(deleteFunc)
 	cc.DeleteButton.Importance = widget.DangerImportance
 
-	dataTag.AddListener(binding.NewDataListener(cc.redraw))
+	dataTag.AddListener(bindings.NewListener(cc.redraw))
 
 	return cc
 }
@@ -77,7 +81,7 @@ func (c *TagCard) Parent() fyne.Window {
 	return c.parent
 }
 
-func (c *TagCard) RefreshStyle() {
+func (c *TagCard) refreshStyle() {
 	defer c.NameLabel.Refresh()
 
 	c.NameLabel.Wrapping = fyne.TextWrapOff
@@ -117,17 +121,19 @@ func (c *TagCard) CreateRenderer() fyne.WidgetRenderer {
 	return c
 }
 
-func (c *TagCard) SetText(text string) {
-	c.SetTextAt(0, text)
+func (c *TagCard) setText(text string) {
+	c.setTextAt(0, text)
 }
 
-func (c *TagCard) SetTextAt(idx int, text string) {
+func (c *TagCard) setTextAt(idx int, text string) {
 	c.NameLabel.Segments[idx].(*widget.TextSegment).Text = text
 	c.NameLabel.Refresh()
 }
 
 func (c *TagCard) redraw() {
+	c.update.Lock()
 	defer c.Refresh()
+	defer c.update.Unlock()
 
 	logger := logging.With(c.deps.Logger(), keys.Component, "TagCard.redraw")
 
@@ -144,12 +150,15 @@ func (c *TagCard) redraw() {
 
 	level.Debug(logger).Message("refreshing tag card", "color", fmt.Sprintf("%#v", tag.Color()))
 
-	c.SetText(tag.Tag.Name)
+	c.setText(tag.Tag.Name)
 	c.ColorSwatch.SetColor(tag.Color())
-	c.RefreshStyle()
+	c.refreshStyle()
 }
 
 func (c *TagCard) TagID() int64 {
+	c.update.RLock()
+	defer c.update.RUnlock()
+
 	logger := logging.With(c.deps.Logger(), keys.Component, "TagCard.TagID")
 
 	tag, err := c.tag.Get()
@@ -220,6 +229,9 @@ func (c *TagCard) deleteTag(callback func(*TagCard)) func() {
 func (c *TagCard) Destroy() {}
 
 func (c *TagCard) Layout(sz fyne.Size) {
+	c.update.RLock()
+	defer c.update.RUnlock()
+
 	fontSize := fyne.CurrentApp().Settings().Theme().Size(theme.SizeNameText)
 
 	c.ColorSwatch.Move(fyne.Position{X: 0, Y: 0})

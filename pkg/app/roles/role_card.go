@@ -3,9 +3,9 @@ package roles
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -31,6 +31,8 @@ type RoleCard struct {
 	ColorSwatch  *colors.ColorSwatch
 	EditButton   *widget.Button
 	DeleteButton *widget.Button
+
+	update *sync.RWMutex
 }
 
 func NewRoleCard(deps dependencies, parent fyne.Window, dataRole bindings.DataProxy[*repository.RoleDBData], deleteFunc func(c *RoleCard), editFunc func(bindings.DataProxy[*repository.RoleDBData], func())) *RoleCard {
@@ -58,17 +60,19 @@ func NewRoleCard(deps dependencies, parent fyne.Window, dataRole bindings.DataPr
 		// DeleteButton: widget.NewButtonWithIcon("delete", theme.DeleteIcon(), nil),
 		EditButton:   widget.NewButton("edit", nil),
 		DeleteButton: widget.NewButton("delete", nil),
+
+		update: &sync.RWMutex{},
 	}
 	cc.ExtendBaseWidget(cc)
 
-	cc.RefreshStyle()
+	cc.refreshStyle()
 	cc.ColorSwatch.SetCornerRadius(theme.InnerPadding() / 2)
 
 	cc.EditButton.OnTapped = cc.editRole(editFunc)
 	cc.DeleteButton.OnTapped = cc.deleteRole(deleteFunc)
 	cc.DeleteButton.Importance = widget.DangerImportance
 
-	dataRole.AddListener(binding.NewDataListener(cc.redraw))
+	dataRole.AddListener(bindings.NewListener(cc.redraw))
 
 	return cc
 }
@@ -77,7 +81,7 @@ func (c *RoleCard) Parent() fyne.Window {
 	return c.parent
 }
 
-func (c *RoleCard) RefreshStyle() {
+func (c *RoleCard) refreshStyle() {
 	defer c.NameLabel.Refresh()
 
 	c.NameLabel.Wrapping = fyne.TextWrapOff
@@ -127,7 +131,9 @@ func (c *RoleCard) SetTextAt(idx int, text string) {
 }
 
 func (c *RoleCard) redraw() {
+	c.update.Lock()
 	defer c.Refresh()
+	defer c.update.Unlock()
 
 	logger := logging.With(c.deps.Logger(), keys.Component, "RoleCard.redraw")
 
@@ -146,10 +152,12 @@ func (c *RoleCard) redraw() {
 
 	c.SetText(role.Role.Name)
 	c.ColorSwatch.SetColor(role.Color())
-	c.RefreshStyle()
+	c.refreshStyle()
 }
 
 func (c *RoleCard) RoleID() int64 {
+	c.update.RLock()
+	defer c.update.RUnlock()
 	logger := logging.With(c.deps.Logger(), keys.Component, "RoleCard.RoleID")
 
 	role, err := c.role.Get()
@@ -220,6 +228,9 @@ func (c *RoleCard) deleteRole(callback func(*RoleCard)) func() {
 func (c *RoleCard) Destroy() {}
 
 func (c *RoleCard) Layout(sz fyne.Size) {
+	c.update.RLock()
+	defer c.update.RUnlock()
+
 	fontSize := fyne.CurrentApp().Settings().Theme().Size(theme.SizeNameText)
 
 	c.ColorSwatch.Move(fyne.Position{X: 0, Y: 0})

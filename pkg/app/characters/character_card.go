@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"sync"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
@@ -61,6 +61,8 @@ type CharacterCard struct {
 	Roles         *minitag.MiniTagSet[string, *RoleMiniTag]
 	roleLookup    map[int64]bool
 	selectedRoles map[string]bool
+
+	update *sync.RWMutex
 }
 
 type images struct {
@@ -152,6 +154,8 @@ func NewCharacterCard(deps dependencies, parent fyne.Window, dataChar bindings.D
 		Roles:         minitag.NewMiniTagSet[string, *RoleMiniTag](),
 		roleLookup:    map[int64]bool{},
 		selectedRoles: map[string]bool{},
+
+		update: &sync.RWMutex{},
 	}
 	cc.ExtendBaseWidget(cc)
 
@@ -173,9 +177,9 @@ func NewCharacterCard(deps dependencies, parent fyne.Window, dataChar bindings.D
 	cc.refreshTags()
 	cc.refreshRoles()
 
-	dataChar.AddListener(binding.NewDataListener(cc.redraw))
-	tagsData.AddListener(binding.NewDataListener(cc.refreshTags))
-	rolesData.AddListener(binding.NewDataListener(cc.refreshRoles))
+	dataChar.AddListener(bindings.NewListener(cc.redraw))
+	tagsData.AddListener(bindings.NewListener(cc.refreshTags))
+	rolesData.AddListener(bindings.NewListener(cc.refreshRoles))
 
 	return cc
 }
@@ -184,7 +188,19 @@ func (c *CharacterCard) Parent() fyne.Window {
 	return c.parent
 }
 
-// func (c *CharacterCard) Tapped(_ *fyne.PointEvent) {}
+func (c *CharacterCard) UpdateRoleSelection(roleID string, selected bool) {
+	c.update.RLock()
+	c.selectedRoles[roleID] = selected
+	c.update.RUnlock()
+	c.redraw()
+}
+
+func (c *CharacterCard) UpdateTagSelection(tagID string, selected bool) {
+	c.update.RLock()
+	c.selectedTags[tagID] = selected
+	c.update.RUnlock()
+	c.redraw()
+}
 
 func (c *CharacterCard) CreateRenderer() fyne.WidgetRenderer {
 	return c
@@ -247,7 +263,8 @@ func (c *CharacterCard) matchesSelectedRoles() bool {
 }
 
 func (c *CharacterCard) redraw() {
-	defer c.Refresh()
+	c.update.Lock()
+	defer c.update.Unlock()
 
 	logger := logging.With(c.deps.Logger(), keys.Component, "CharacterCard.redraw")
 
@@ -275,23 +292,32 @@ func (c *CharacterCard) redraw() {
 	}
 
 	c.NameLabel.Text = char.Character.Name
+	c.NameLabel.Refresh()
 	c.CorporationLabel.Text = char.Corporation.Name
+	c.CorporationLabel.Refresh()
 	c.AllianceLabel.Text = char.Alliance.Name.String
+	c.AllianceLabel.Refresh()
 
 	c.CorporationTicker.Text = fmt.Sprintf("[%s]", char.Corporation.Ticker)
+	c.CorporationTicker.Refresh()
 	c.AllianceTicker.Text = ""
 	if char.Alliance.Ticker.String != "" {
 		c.AllianceTicker.Text = fmt.Sprintf("[%s]", char.Alliance.Ticker.String)
 	}
+	c.AllianceTicker.Refresh()
 
 	images := getImagesForChar(logger, char)
 	c.Portrait.Resource = images.Portrait.Resource
+	c.Portrait.Refresh()
 	c.CorporationIcon.Resource = images.Corporation.Resource
+	c.CorporationIcon.Refresh()
 	c.AllianceIcon.Resource = images.Alliance.Resource
+	c.AllianceIcon.Refresh()
 }
 
 func (c *CharacterCard) refreshTags() {
-	defer c.Refresh()
+	c.update.Lock()
+	defer c.update.Unlock()
 
 	logger := logging.With(c.deps.Logger(), keys.Component, "CharacterCard.refreshTags")
 
@@ -325,13 +351,14 @@ func (c *CharacterCard) refreshTags() {
 		c.miniTagLookup[tag.Tag.ID] = true
 		mt := NewCharacterMiniTag(c.deps, c.parent, c.char, c.tags.Child(i))
 		c.MiniTags.Add(mt)
-		mt.Refresh()
+		// mt.Refresh()
 	}
 	c.MiniTags.Refresh()
 }
 
 func (c *CharacterCard) refreshRoles() {
-	defer c.Refresh()
+	c.update.Lock()
+	defer c.update.Unlock()
 
 	logger := logging.With(c.deps.Logger(), keys.Component, "CharacterCard.refreshRoles")
 
@@ -365,7 +392,7 @@ func (c *CharacterCard) refreshRoles() {
 		c.roleLookup[role.Role.ID] = true
 		mt := NewRoleMiniTag(c.deps, c.parent, c.char, c.roles.Child(i), c.tags)
 		c.Roles.Add(mt)
-		mt.Refresh()
+		// mt.Refresh()
 	}
 	c.Roles.Refresh()
 }
@@ -480,6 +507,9 @@ func (c *CharacterCard) deleteCharacter(callback func(*CharacterCard)) func() {
 func (c *CharacterCard) Destroy() {}
 
 func (c *CharacterCard) Layout(sz fyne.Size) {
+	c.update.RLock()
+	defer c.update.RUnlock()
+
 	fontSize := fyne.CurrentApp().Settings().Theme().Size(theme.SizeNameText)
 
 	// Pictures

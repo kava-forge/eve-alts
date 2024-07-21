@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
@@ -32,6 +32,8 @@ type CharacterMiniTag struct {
 	tag     bindings.DataProxy[*repository.TagDBData]
 	isMatch bool
 	missing []string
+
+	update *sync.RWMutex
 }
 
 func NewCharacterMiniTag(deps dependencies, parent fyne.Window, char bindings.DataProxy[*repository.CharacterDBData], tag bindings.DataProxy[*repository.TagDBData]) *CharacterMiniTag {
@@ -52,18 +54,22 @@ func NewCharacterMiniTag(deps dependencies, parent fyne.Window, char bindings.Da
 		parent:  parent,
 		char:    char,
 		tag:     tag,
+
+		update: &sync.RWMutex{},
 	}
 
 	cmt.redraw()
 
-	char.AddListener(binding.NewDataListener(cmt.redraw))
-	tag.AddListener(binding.NewDataListener(cmt.redraw))
+	char.AddListener(bindings.NewListener(cmt.redraw))
+	tag.AddListener(bindings.NewListener(cmt.redraw))
 
 	return cmt
 }
 
 func (c *CharacterMiniTag) redraw() {
+	c.update.Lock()
 	defer c.Refresh()
+	defer c.update.Unlock()
 
 	logger := logging.With(c.deps.Logger(), keys.Component, "CharacterMiniTag.redraw")
 
@@ -100,7 +106,7 @@ func (c *CharacterMiniTag) redraw() {
 	c.ColorSwatch.SetColor(tag.Color())
 	c.isMatch = isMatch
 	c.MiniTag.Dimmed = !c.isMatch
-	c.RefreshStyle()
+	c.MiniTag.RefreshStyle()
 
 	ids := make([]int64, 0, len(missing))
 	for _, sk := range missing {
@@ -128,6 +134,9 @@ func (c *CharacterMiniTag) redraw() {
 }
 
 func (c *CharacterMiniTag) ShouldShow() bool {
+	c.update.RLock()
+	defer c.update.RUnlock()
+
 	logger := logging.With(c.deps.Logger(), keys.Component, "CharacterMiniTag.ShouldShow")
 
 	tag, err := c.tag.Get()
@@ -158,6 +167,9 @@ func (c *CharacterMiniTag) ShouldShow() bool {
 }
 
 func (c *CharacterMiniTag) SortKey() string {
+	c.update.RLock()
+	defer c.update.RUnlock()
+
 	logger := logging.With(c.deps.Logger(), keys.Component, "CharacterMiniTag.SortKey")
 
 	tag, err := c.tag.Get()

@@ -1,8 +1,9 @@
 package characters
 
 import (
+	"sync"
+
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
 
 	"github.com/kava-forge/eve-alts/lib/logging"
@@ -22,6 +23,8 @@ type RoleFilterTag struct {
 	parent   fyne.Window
 	role     bindings.DataProxy[*repository.RoleDBData]
 	selected bindings.DataProxy[bool]
+
+	update *sync.RWMutex
 }
 
 func NewRoleFilterTag(deps dependencies, parent fyne.Window, roleData bindings.DataProxy[*repository.RoleDBData], selected bindings.DataProxy[bool]) *RoleFilterTag {
@@ -42,20 +45,24 @@ func NewRoleFilterTag(deps dependencies, parent fyne.Window, roleData bindings.D
 		parent:   parent,
 		role:     roleData,
 		selected: selected,
+
+		update: &sync.RWMutex{},
 	}
 
 	tmt.MiniTag.UnDimmedBold = true
 
 	tmt.redraw()
 
-	roleData.AddListener(binding.NewDataListener(tmt.redraw))
-	selected.AddListener(binding.NewDataListener(tmt.redraw))
+	roleData.AddListener(bindings.NewListener(tmt.redraw))
+	selected.AddListener(bindings.NewListener(tmt.redraw))
 
 	return tmt
 }
 
 func (c *RoleFilterTag) redraw() {
+	c.update.Lock()
 	defer c.Refresh()
+	defer c.update.Unlock()
 
 	logger := logging.With(c.deps.Logger(), keys.Component, "RoleFilterTag.redraw")
 
@@ -90,7 +97,7 @@ func (c *RoleFilterTag) redraw() {
 	c.SetText(role.Role.Name)
 	c.ColorSwatch.SetColor(role.Color())
 	c.MiniTag.Dimmed = !selected
-	c.RefreshStyle()
+	c.MiniTag.RefreshStyle()
 	c.MiniTag.Resize(c.MiniTag.Size())
 }
 
