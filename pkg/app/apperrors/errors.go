@@ -2,6 +2,7 @@ package apperrors
 
 import (
 	"fmt"
+	"sync"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
@@ -68,10 +69,15 @@ func (e *appError) Unwrap() error {
 
 func (e *appError) Cause() error { return e.cause }
 
+var showLock = &sync.Mutex{}
+
 func Show(logger logging.Logger, parent fyne.Window, err PublicErr, onClosed func()) {
+	showLock.Lock()
+
 	level.Error(logger).Err("application error", err.InternalError())
 	d := dialog.NewError(err, parent)
 	d.SetOnClosed(func() {
+		defer showLock.Unlock()
 		if onClosed != nil {
 			onClosed()
 		}

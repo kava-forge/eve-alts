@@ -189,16 +189,16 @@ func (c *CharacterCard) Parent() fyne.Window {
 }
 
 func (c *CharacterCard) UpdateRoleSelection(roleID string, selected bool) {
-	c.update.RLock()
+	c.update.Lock()
 	c.selectedRoles[roleID] = selected
-	c.update.RUnlock()
+	c.update.Unlock()
 	c.redraw()
 }
 
 func (c *CharacterCard) UpdateTagSelection(tagID string, selected bool) {
-	c.update.RLock()
+	c.update.Lock()
 	c.selectedTags[tagID] = selected
-	c.update.RUnlock()
+	c.update.Unlock()
 	c.redraw()
 }
 
