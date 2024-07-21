@@ -72,7 +72,7 @@ func NewTagCard(deps dependencies, parent fyne.Window, dataTag bindings.DataProx
 	cc.DeleteButton.OnTapped = cc.deleteTag(deleteFunc)
 	cc.DeleteButton.Importance = widget.DangerImportance
 
-	dataTag.AddListener(bindings.NewListener(cc.redraw))
+	dataTag.AddListener(bindings.NewListener(logger, cc.redraw))
 
 	return cc
 }

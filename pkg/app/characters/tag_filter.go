@@ -118,7 +118,7 @@ func (tf *TagFilter) AttachToCharacter(cc *CharacterCard, tagID string, tagSelec
 
 	level.Info(logger).Message("attaching to character", "tag_id", tagID)
 
-	tagSelected.AddListener(bindings.NewListener(func() {
+	tagSelected.AddListener(bindings.NewListener(logger, func() {
 		level.Debug(logger).Message("refreshing character for filter change")
 		selected, err := tagSelected.Get()
 		if err != nil {

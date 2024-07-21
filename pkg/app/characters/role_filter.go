@@ -117,7 +117,7 @@ func (tf *RoleFilter) AttachToCharacter(cc *CharacterCard, roleID string, roleSe
 
 	level.Info(logger).Message("attaching to character", "role_id", roleID)
 
-	roleSelected.AddListener(bindings.NewListener(func() {
+	roleSelected.AddListener(bindings.NewListener(logger, func() {
 		level.Debug(logger).Message("refreshing character for role filter change")
 		selected, err := roleSelected.Get()
 		if err != nil {

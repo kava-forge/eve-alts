@@ -177,9 +177,9 @@ func NewCharacterCard(deps dependencies, parent fyne.Window, dataChar bindings.D
 	cc.refreshTags()
 	cc.refreshRoles()
 
-	dataChar.AddListener(bindings.NewListener(cc.redraw))
-	tagsData.AddListener(bindings.NewListener(cc.refreshTags))
-	rolesData.AddListener(bindings.NewListener(cc.refreshRoles))
+	dataChar.AddListener(bindings.NewListener(logger, cc.redraw))
+	tagsData.AddListener(bindings.NewListener(logger, cc.refreshTags))
+	rolesData.AddListener(bindings.NewListener(logger, cc.refreshRoles))
 
 	return cc
 }

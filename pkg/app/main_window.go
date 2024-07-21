@@ -17,6 +17,7 @@ import (
 	"github.com/kava-forge/eve-alts/pkg/app/tags"
 	"github.com/kava-forge/eve-alts/pkg/database"
 	"github.com/kava-forge/eve-alts/pkg/keys"
+	"github.com/kava-forge/eve-alts/pkg/panics"
 )
 
 func NewMainWindow(deps dependencies, a fyne.App) fyne.Window {
@@ -46,6 +47,7 @@ func NewMainWindow(deps dependencies, a fyne.App) fyne.Window {
 		wg.Add(3)
 
 		go func() {
+			defer panics.Handler(logger)
 			defer wg.Done()
 			knownChars, err := deps.AppRepo().GetAllCharacters(ctx, nil)
 			if err != nil && !errors.Is(err, database.ErrNoRows) {
@@ -65,6 +67,7 @@ func NewMainWindow(deps dependencies, a fyne.App) fyne.Window {
 		}()
 
 		go func() {
+			defer panics.Handler(logger)
 			defer wg.Done()
 			knownTags, err := deps.AppRepo().GetAllTags(ctx, nil)
 			if err != nil && !errors.Is(err, database.ErrNoRows) {
@@ -84,6 +87,7 @@ func NewMainWindow(deps dependencies, a fyne.App) fyne.Window {
 		}()
 
 		go func() {
+			defer panics.Handler(logger)
 			defer wg.Done()
 			knownRoles, err := deps.AppRepo().GetAllRoles(ctx, nil)
 			if err != nil && !errors.Is(err, database.ErrNoRows) {

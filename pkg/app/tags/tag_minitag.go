@@ -53,8 +53,8 @@ func NewTagMiniTag(deps dependencies, parent fyne.Window, tagData bindings.DataP
 
 	tmt.redraw()
 
-	tagData.AddListener(bindings.NewListener(tmt.redraw))
-	selected.AddListener(bindings.NewListener(tmt.redraw))
+	tagData.AddListener(bindings.NewListener(logger, tmt.redraw))
+	selected.AddListener(bindings.NewListener(logger, tmt.redraw))
 
 	return tmt
 }

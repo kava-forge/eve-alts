@@ -59,9 +59,9 @@ func NewRoleMiniTag(deps dependencies, parent fyne.Window, char bindings.DataPro
 	cmt.addTag()
 	cmt.redraw()
 
-	char.AddListener(bindings.NewListener(cmt.redraw))
-	role.AddListener(bindings.NewListener(cmt.redraw))
-	tags.AddListener(bindings.NewListener(func() {
+	char.AddListener(bindings.NewListener(logger, cmt.redraw))
+	role.AddListener(bindings.NewListener(logger, cmt.redraw))
+	tags.AddListener(bindings.NewListener(logger, func() {
 		cmt.addTag()
 		cmt.redraw()
 	}))
@@ -86,7 +86,7 @@ func (c *RoleMiniTag) addTag() {
 			continue
 		}
 
-		c.tags.Child(i).AddListener(bindings.NewListener(c.redraw))
+		c.tags.Child(i).AddListener(bindings.NewListener(logger, c.redraw))
 
 		c.knownTags[t.Tag.ID] = true
 	}

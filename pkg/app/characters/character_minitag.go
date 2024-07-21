@@ -60,8 +60,8 @@ func NewCharacterMiniTag(deps dependencies, parent fyne.Window, char bindings.Da
 
 	cmt.redraw()
 
-	char.AddListener(bindings.NewListener(cmt.redraw))
-	tag.AddListener(bindings.NewListener(cmt.redraw))
+	char.AddListener(bindings.NewListener(logger, cmt.redraw))
+	tag.AddListener(bindings.NewListener(logger, cmt.redraw))
 
 	return cmt
 }

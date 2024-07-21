@@ -72,7 +72,7 @@ func NewRoleCard(deps dependencies, parent fyne.Window, dataRole bindings.DataPr
 	cc.DeleteButton.OnTapped = cc.deleteRole(deleteFunc)
 	cc.DeleteButton.Importance = widget.DangerImportance
 
-	dataRole.AddListener(bindings.NewListener(cc.redraw))
+	dataRole.AddListener(bindings.NewListener(logger, cc.redraw))
 
 	return cc
 }

@@ -53,8 +53,8 @@ func NewRoleFilterTag(deps dependencies, parent fyne.Window, roleData bindings.D
 
 	tmt.redraw()
 
-	roleData.AddListener(bindings.NewListener(tmt.redraw))
-	selected.AddListener(bindings.NewListener(tmt.redraw))
+	roleData.AddListener(bindings.NewListener(logger, tmt.redraw))
+	selected.AddListener(bindings.NewListener(logger, tmt.redraw))
 
 	return tmt
 }

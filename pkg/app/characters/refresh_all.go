@@ -16,6 +16,7 @@ import (
 	"github.com/kava-forge/eve-alts/pkg/app/bindings"
 	"github.com/kava-forge/eve-alts/pkg/esi"
 	"github.com/kava-forge/eve-alts/pkg/keys"
+	"github.com/kava-forge/eve-alts/pkg/panics"
 	"github.com/kava-forge/eve-alts/pkg/repository"
 )
 
@@ -46,6 +47,7 @@ func NewRefreshAllButton(deps dependencies, parent fyne.Window, chars *bindings.
 		errs := make(chan error, len(charList))
 		done := make(chan struct{})
 		go func() {
+			defer panics.Handler(logger)
 			for err := range errs {
 				me = multierror.Append(me, err)
 			}
@@ -62,6 +64,7 @@ func NewRefreshAllButton(deps dependencies, parent fyne.Window, chars *bindings.
 			char := char
 			wg.Add(1)
 			go func() {
+				defer panics.Handler(logger)
 				defer wg.Done()
 
 				dbTok, err := deps.AppRepo().GetTokenForCharacter(ctx, char.Character.ID, nil)
